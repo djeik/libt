@@ -1,0 +1,472 @@
+-- libt can be invoked as a script to force
+-- clean the modules cache.
+local args = {...}
+local forceReload = args[1]
+
+-- Initialize the T module
+local t = {}
+
+-- Initialize the modules cache
+if libtmodules == nil or forceReload then
+  _G['libtmodules'] = {
+    t = t
+  }
+else
+  return libtmodules.t
+end
+
+-- | Collection of status codes for T
+-- networking stack.
+t.statusCode = {
+  -- | The action completed successfully.
+  OK = 200,
+  -- | The data sent with the action is
+  -- inappropriate.
+  BAD_REQUEST = 400,
+  -- | When returned by a callback, the
+  -- libtnet framework will not send a
+  -- response to the client.
+  IGNORE = 20,
+  -- | The action timed out. This response
+  -- is generated client-side.
+  TIMEOUT = 22,
+  -- | Abort the server after this request
+  -- completes. The client will receive
+  -- status OK.
+  FINISH = 50
+}
+
+-- | Message type for service discovery
+-- broadcasts
+t.DISCOVER = "DISCOVER"
+
+-- | Count messages sent by this instance of
+-- T.
+t.MESSAGE_COUNTER = 0
+
+-- | Default time to wait before giving up
+-- on T network requests or service
+-- discoveries.
+t.DEFAULT_TIMEOUT = 2
+
+-- | Channel to send discovery broadcasts
+-- on.
+t.DISCOVER_CHAN = 3
+
+-- | Channel to offer services on. This
+-- channel is used for responses to
+-- discovery broadcasts.
+t.OFFER_CHAN = 4
+
+-- | Channel to send requests on.
+t.REQUEST_CHAN = 5
+
+-- | Channel to send responses on.
+t.RESPONSE_CHAN = 6
+
+local EMPTY_TABLE_STRING = "{}"
+
+-- | Creates a reply code, which is based on
+-- the computer ID and the current message
+-- counter value. These IDs are unique, and
+-- are sent along with requests from the
+-- client.
+-- The server is required to include the
+-- reply code in the response, which ties it
+-- to a particular request. This allows
+-- clients to filter out other traffic.
+function makeReplyCode()
+  local code =
+    tostring(os.getComputerID()) ..
+    "-" ..
+    tostring(t.MESSAGE_COUNTER)
+  t.MESSAGE_COUNTER = t.MESSAGE_COUNTER + 1
+  return code
+end
+
+-- | Parses a libtnet request string into
+-- the action, replyCode, and data sections.
+-- The result is a table with the entries:
+-- * action
+-- * replyCode
+-- * data
+function parseRequest(request)
+  local match = string.gmatch(
+    request,
+    "(%S+)%s+(%S+)%s+(.+)"
+  )
+  local action, replyCode, data = match()
+  local result = {
+    action = action,
+    replyCode = replyCode,
+    data = data
+  }
+  return result
+end
+
+-- | Parses a libtnet response string into
+-- the replyCode, status, and data sections.
+-- The result is a table with the entries:
+-- * replyCode
+-- * status
+-- * data
+function parseResponse(response)
+  local match = string.gmatch(
+    response,
+    "(%S+)%s+(%S+)%s+(.+)"
+  )
+  local replyCode, status, data = match()
+  return {
+    replyCode = replyCode,
+    status = tonumber(status),
+    data = data
+  }
+end
+
+-- | Parses a libtnet discovery broadcast
+-- into the replyCode section.
+-- The result is a table with one entry:
+-- * replyCode
+function parseDiscover(offer)
+  local match = string.gmatch(
+    offer,
+    t.DISCOVER .. "%s+(%S+)"
+  )
+  local replyCode = match()
+  return {
+    replyCode = replyCode
+  }
+end
+
+-- | Augments a regular modem with functions
+-- to perform libtnet actions.
+function t.initModem(modem)
+  -- | Sets up an event loop to respond to
+  -- discovery broadcasts by sending an
+  -- offer message listing the given
+  -- handlers.
+  function modem.offer(handlers)
+    modem.open(t.DISCOVER_CHAN)
+    while true do
+      local _, side, sChan, rChan, msg =
+        os.pullEvent("modem_message")
+      if sChan == t.DISCOVER_CHAN then
+        local offer = parseDiscover(msg)
+        if offer ~= nil then
+          modem.transmit(
+            rChan, 0,
+            offer.replyCode .. " " ..
+            textutils.serialize(
+              handlers
+            )
+          )
+        end
+      end
+    end
+    modem.close(t.DISCOVER_CHAN)
+  end
+
+  -- | Sends a discovery broadcast to
+  -- determine the available actions in the
+  -- network.
+  -- Accepts an optional timeout argument,
+  -- in seconds. Note that the timeout is
+  -- essential, since there's no way of
+  -- knowing when to really stop listening.
+  -- ComputerCraft is fast-ish, so small
+  -- values are usually fine. The default is
+  -- fairly generous, so you may want to
+  -- take something smaller.
+  -- Prints a message to the terminal if a
+  -- server replies with a malformed offer.
+  function modem.discover(timeout)
+    timeout = timeout or t.DEFAULT_TIMEOUT
+    local replyCode = t.makeReplyCode()
+    modem.open(t.OFFER_CHAN)
+    modem.transmit(
+      t.DISCOVER_CHAN, t.OFFER_CHAN,
+      t.DISCOVER .. " " .. replyCode
+    )
+    local offers = {}
+    local fn = parallel.waitForAny(
+      function()
+        while true do
+          local _, side, sChan, rChan, msg =
+            os.pullEvent("modem_message")
+          local match = string.gmatch(
+            msg,
+            "(%S+)%s+(.+)"
+          )
+          local replyCode2, data = match()
+          if sChan == t.OFFER_CHAN then
+            if replyCode2 == replyCode then
+              if data ~= nil then
+                data = textutils.unserialize(data)
+                if data then
+                  for _, x in ipairs(data) do
+                    table.insert(offers, x)
+                  end
+                end
+              else
+                print("failed to parse offer")
+              end
+            end
+          end
+        end
+      end,
+      function()
+        sleep(timeout)
+      end
+    )
+    return offers
+  end
+
+  -- | Sends a request for the network to
+  -- perform an action on some data.
+  -- The data must be a table.
+  -- If no data is provided, then an an
+  -- empty table is sent.
+  -- Something has to
+  -- be sent due to the shitty regex-based
+  -- parser that we use.
+  function modem.request(action, data, timeout)
+    data = data or EMPTY_TABLE
+    timeout = timeout or t.DEFAULT_TIMEOUT
+
+    local replyCode = t.makeReplyCode()
+
+    modem.open(t.RESPONSE_CHAN)
+    modem.transmit(
+      t.REQUEST_CHAN, t.RESPONSE_CHAN,
+      action .. " " ..
+      replyCode .. " " ..
+      textutils.serialize(data)
+    )
+
+    local response = nil
+    local fn = parallel.waitForAny(
+      function()
+        response = nil
+        while response == nil do
+          local _, side, sChan,
+            rChan, msg =
+              os.pullEvent("modem_message")
+          response =
+            parseResponse(msg)
+          if response.replyCode ~= replyCode then
+            response = nil
+          end
+        end
+        return response
+      end,
+      function()
+        sleep(timeout)
+      end
+    )
+    modem.close(t.RESPONSE_CHAN)
+
+    if fn == 2 then
+      response = {
+        status = t.statusCode.TIMEOUT
+      }
+    end
+
+    return response
+  end
+
+  -- | Sets up an event loop to await for
+  -- libtnet requests. Requests are
+  -- dispatched to handlers based on the
+  -- `action` parameter of the request.
+  -- Each handler is a callback function
+  -- taking one argument, which is the table
+  -- sent by the client or an empty table in
+  -- case nothing was sent.
+  -- Callback functions must return exactly
+  -- two values. The first is the libtnet
+  -- status code from the `t.statusCode`
+  -- table, and the second is a table to
+  -- return to the client.
+  function modem.listen(handlers)
+    local fn = parallel.waitForAny(
+      function()
+        modem.offer(t.keys(handlers))
+      end,
+      function()
+        modem.open(t.REQUEST_CHAN)
+        local done = false
+        while not done do
+          local _, side, sChan,
+            rChan, msg =
+            os.pullEvent("modem_message")
+          local request =
+            parseRequest(msg)
+          local handler =
+            handlers[request.action] or handlers["*"]
+          if handler then
+            local status, data =
+              handler(
+                textutils.unserialize(
+                  request.data
+                )
+              )
+
+            if status == t.statusCode.FINISH then
+              done = true
+              status = t.statusCode.OK
+            end
+
+            if status ~= t.statusCode.IGNORE then
+              modem.transmit(rChan, 0,
+                request.replyCode .. " " ..
+                tostring(status) .. " " ..
+                tostring(data)
+              )
+            end
+          end
+        end
+      end
+    )
+  end
+end
+
+-- | Produces a table of the keys in a
+-- table.
+function t.keys(tab)
+  local result = {}
+  for k, _ in pairs(tab) do
+    table.insert(result, k)
+  end
+  return result
+end
+
+-- | Creates an iterator for the keys in a
+-- table
+function t.ikeys(tab)
+  return t.from(t.keys(tab))
+end
+
+-- | Creates a new table by running a
+-- function on each element of a table.
+function t.map(array, func)
+  local result = {}
+  for _, v in ipairs(array) do
+    table.insert(result, func(v))
+  end
+  return result
+end
+
+-- | Maps a function inside an iterator.
+function t.imap(it, func)
+  return function()
+    local x = it()
+    if x == nil then
+      return nil
+    else
+      return func(x)
+    end
+  end
+end
+
+-- | Creates a new table containing only the
+-- elements satisfying a predicate.
+function t.filter(array, func)
+  local result = {}
+  for _, v in ipairs(array) do
+    if func(v) then
+      table.insert(result, v)
+    end
+  end
+  return result
+end
+
+-- | Drops elements from an iterator unless
+-- they satisfy a predicate.
+function t.ifilter(it, func)
+  return function()
+    local x = nil
+    while x == nil do
+      x = it()
+      if x == nil then
+        return nil
+      elseif func(x) then
+        return x
+      else
+        x = nil
+      end
+    end
+  end
+end
+
+-- | Construct an iterator from an array.
+function t.from(array)
+  local i = 1
+  return function()
+    if i <= #array then
+      local x = array[i]
+      i = i + 1
+      return x
+    else
+      return nil
+    end
+  end
+end
+
+-- | Construct an array from an iterator.
+function t.consume(it)
+  local result = {}
+  for x in it do
+    table.insert(result, x)
+  end
+  return result
+end
+
+-- | Iterate over the tokens in a string
+-- that result by separating by any of the
+-- characters in `sep`.
+function t.splitBy(str, sep)
+  return string.gmatch(str, "[^"..sep.."]")
+end
+
+-- | Iterate over the tokens in a string
+-- that result by separating by one or more
+-- whitespace characters
+function t.spaceSplit(str)
+  return string.gmatch(str, "(%S+)")
+end
+
+function compose(i, fns)
+  if i == #fns then
+    return fns[i]
+  else
+    return function(x)
+      return fns[i](compose(i+1, fns)(x))
+    end
+  end
+end
+
+-- | Right-to-left composition of functions.
+-- The functions must all be unary.
+function t.c(...)
+  return compose(1, arg)
+end
+
+-- | Loads a T module.
+-- Does not account for circular imports, so
+-- don't make cycles!
+function t.require(name)
+  local m = libtmodules[name]
+  if m == nil then
+    local f = loadfile(name)
+    if f == nil then
+      m = nil
+    else
+      m = f()
+      libtmodules[name] = m
+    end
+  end
+  return m
+end
+
+return t
+-- vim: ft=lua shiftwidth=2 expandtab colorcolumn=45 tw=44

@@ -1,0 +1,62 @@
+local t = loadfile("libt")()
+
+local tput = {}
+
+tput.CONNECTION = {
+  HOST = "localhost",
+  PORT = 8080
+}
+
+function mkUrl(file)
+  return "http://" ..
+    tput.CONNECTION.HOST ..
+    ":" ..
+    tostring(tput.CONNECTION.PORT) ..
+    "/files/" ..
+    file
+end
+
+-- | Downloads a file and saves it to disk.
+-- Returns a boolean representing success.
+function tput.get(file)
+  local result = http.get(
+    mkUrl(file),
+    {
+      Accept = "*/*"
+    }
+  )
+  if result == nil then
+    return false
+  end
+  local h = fs.open(file, "w")
+  h.write(result.readAll())
+  h.close()
+  return true
+end
+
+-- | Reads a file and uploads it to TPut.
+function tput.put(file)
+  -- read the file
+  local h = fs.open(file, 'r')
+  local text = h.readAll()
+  h.close()
+
+  -- prepare the HTTP headers
+  local headers = {}
+  headers["Content-type"] = "text/plain; charset=utf-8"
+  headers["Accept"] = "text/plain; charset=utf-8"
+
+  -- send the POST request
+  local result = http.post(
+    mkUrl(file),
+    text,
+    headers
+  )
+
+  -- return the result
+  return result
+end
+
+return tput
+
+-- vim: ft=lua shiftwidth=2 expandtab colorcolumn=45

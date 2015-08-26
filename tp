@@ -1,0 +1,22 @@
+local t = loadfile("libt")()
+if t == nil then
+  print("libt not available")
+  return nil
+end
+
+local tput = t.require("libtput")
+if tput == nil then
+  print("libtput not availe")
+  return nil
+end
+
+local args = { ... }
+
+if args[1] == nil then
+  print("usage: ", shell.getRunningProgram(), " FILE")
+  return nil
+end
+
+if not tput.put(args[1]) then
+  print("failed")
+end
