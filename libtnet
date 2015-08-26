@@ -141,6 +141,29 @@ function parseDiscover(offer)
   }
 end
 
+function parseOffer(offer)
+  local match = string.gmatch(
+    msg,
+    "(%S+)%s+(.+)"
+  )
+  local replyCode, data = match()
+  if replyCode == nil or data == nil then
+    return nil
+  else
+    local handlers = textutils.unserialize(
+      data
+    )
+    if handlers == nil then
+      return nil
+    else
+      return {
+        replyCode = replyCode,
+        handlers = handlers
+      }
+    end
+  end
+end
+
 -- | Augments a regular modem with functions
 -- to perform libtnet actions.
 function tnet.init(modem)
@@ -209,30 +232,19 @@ function tnet.init(modem)
         while true do
           local _, side, sChan, rChan, msg =
             os.pullEvent("modem_message")
-          local match = string.gmatch(
-            msg,
-            "(%S+)%s+(.+)"
-          )
-          local replyCode2, data = match()
           if sChan == t.OFFER_CHAN then
-            if replyCode2 == replyCode then
-              if data ~= nil then
-                data =
-                  textutils.unserialize(
-                    data
-                  )
-                if data then
-                  for _, x
-                    in ipairs(data)
-                  do
-                    table.insert(offers, x)
-                  end
-                end
-              else
-                print(
-                  "failed to parse offer"
+            local offer = parseOffer(msg)
+            if offer ~= nil then
+              if offer.replyCode ==
+                  replyCode
+              then
+                t.extend(
+                  offers,
+                  offer.handlers
                 )
               end
+            else
+              print("failed to parse offer")
             end
           end
         end
@@ -454,5 +466,13 @@ function tnet.init(modem)
   end
 end
 
+-- Export the parsing functions in case
+-- someone wants access to the low-level
+-- API.
+tnet.parse = {}
+tnet.parse.request = parseRequest
+tnet.parse.response = parseResponse
+tnet.parse.offer = parseOffer
+tnet.parse.discover = parseDiscover
 
 -- vim: ft=lua shiftwidth=2 expandtab colorcolumn=45 tw=44
