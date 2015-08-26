@@ -468,5 +468,12 @@ function t.require(name)
   return m
 end
 
+function t.extend(tab1, tab2)
+  for _, v in ipairs(tab2) do
+    table.insert(tab1, v)
+  end
+end
+
 return t
+
 -- vim: ft=lua shiftwidth=2 expandtab colorcolumn=45 tw=44
