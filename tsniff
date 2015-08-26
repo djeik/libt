@@ -1,0 +1,157 @@
+-- | A libtnet sniffer.
+--
+-- usage: tsniff [-v] [ACTION...]
+
+local t = loadfile("libt")()
+local tnet = t.require("libtnet")
+local modem = peripheral.find("modem")
+local args = { ... }
+local actions = {}
+
+-- all remaining commandline arguments are
+-- actions to listen for.
+actions = args
+
+-- | Parses a libtnet reply code into its
+-- constituent computer ID and sequence
+-- number.
+-- In particular, returns a table with an
+-- `if` and `seq` entry if the parse
+-- succeeded. If the parse fails, this
+-- function returns nil.
+function parseReplyCode(code)
+  local match = string.gmatch(
+    code,
+    "%d+-%d"
+  )
+  local id, seq = match()
+  local result = {}
+  if id == nil or seq == nil then
+    return nil
+  else
+    return {
+      id = id,
+      seq = seq
+    }
+  end
+end
+
+-- define the pretty-printing functions
+printers = {}
+
+printers[tnet.REQUEST_CHAN] = function(req)
+  local request = tnet.parse.request(req)
+  if request == nil then
+    print("INVALID REQUEST")
+  else
+    local replyCode = parseReplyCode(
+      request.replyCode
+    )
+    print(
+      replyCode.id, " ",
+      "(", replyCode.seq, ")",
+      " -> ",
+      request.action
+    )
+  end
+end
+
+printers[tnet.RESPONSE_CHAN] = function(
+  resp
+)
+  local response = tnet.parse.response(
+    resp
+  )
+  if response == nil then
+    print("INVALID RESPONSE")
+    return false
+  else
+    local replyCode = parseReplyCode(
+      response.replyCode
+    )
+    print(
+      replyCode.id, " ",
+      "(", replyCode.seq, ")",
+      " <- ",
+      response.action, " ",
+      "(", response.status, ")"
+    )
+    return true
+  end
+end
+
+printers[tnet.DISCOVER_CHAN] = function(
+  disc
+)
+  local discover = tnet.parse.discover(disc)
+  if discover == nil then
+    print("INVALID DISCOVER")
+    return false
+  else
+    local replyCode = parseReplyCode(
+      discover.replyCode
+    )
+    print(
+      replyCode.id, 
+      " ",
+      "(", replyCode.seq, ")",
+      " ",
+      tnet.DISCOVER
+    )
+    return true
+  end
+end
+
+printers[tnet.OFFER_CHAN] = function(
+  offer
+)
+  offer = tnet.parse.offer(offer)
+  if offer == nil then
+    print("INVALID OFFER")
+    return false
+  else
+    local replyCode = parseReplyCode(
+      discover.replyCode
+    )
+    print(
+      replyCode.id,
+      " ",
+      "(", replyCode.seq, ")",
+      " ",
+      "OFFER",
+      " ",
+      table.concat(discover.handlers, ", ")
+    )
+    return true
+  end
+end
+
+function main()
+  modem.open(tnet.REQUEST_CHAN)
+  modem.open(tnet.RESPONSE_CHAN)
+  modem.open(tnet.DISCOVER_CHAN)
+  modem.open(tnet.OFFER_CHAN)
+
+  local done = false
+  while not done do
+    local e, side, sChan, rChan, msg =
+      os.pullEvent()
+    if e == "key" then
+      done = true
+    elseif e == "modem_message" then
+      local printer = printers[sChan]
+      if printer ~= nil then
+        printer(msg)
+      end
+    end
+  end
+
+  modem.close(tnet.OFFER_CHAN)
+  modem.close(tnet.DISCOVER_CHAN)
+  modem.close(tnet.RESPONSE_CHAN)
+  modem.close(tnet.REQUEST_CHAN)
+end
+
+main()
+
+-- vim: ft=lua shiftwidth=2 expandtab colorcolumn=45 tw=44
