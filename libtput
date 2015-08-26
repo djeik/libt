@@ -1,5 +1,3 @@
-local t = loadfile("libt")()
-
 local tput = {}
 
 tput.CONNECTION = {

@@ -1,24 +1,44 @@
+local t = loadfile("libt")()
+
 local tnet = {}
 
 -- | Collection of status codes for T
 -- networking stack.
 tnet.statusCode = {
+  -- | The processing time on the server is
+  -- likely to exceed the timeout on the
+  -- client.
+  WAIT = 100,
   -- | The action completed successfully.
   OK = 200,
+  -- | The desired action is temporarily
+  -- available under a different name.
+  FOUND = 310,
+  -- | The desired action is permanently
+  -- available under a different name.
+  MOVED = 320,
   -- | The data sent with the action is
   -- inappropriate.
-  BAD_REQUEST = 400,
+  BAD = 400,
+  -- | The data sent with the action is
+  -- correct, but the server failed to
+  -- process the action.
+  FAIL = 500,
+  -- | The server failed to process the
+  -- request right now, but can do so at a
+  -- later time.
+  REPEAT = 510,
   -- | When returned by a callback, the
   -- libtnet framework will not send a
   -- response to the client.
-  IGNORE = 20,
+  IGNORE = 0,
   -- | The action timed out. This response
   -- is generated client-side.
-  TIMEOUT = 22,
+  TIMEOUT = 1,
   -- | Abort the server after this request
   -- completes. The client will receive
-  -- status OK.
-  FINISH = 50
+  -- status FAIL.
+  ABORT = -1
 }
 
 -- | Message type for service discovery
@@ -123,26 +143,39 @@ end
 
 -- | Augments a regular modem with functions
 -- to perform libtnet actions.
-function t.initModem(modem)
+function tnet.init(modem)
+  -- | Association of action -> action that
+  -- is a cache of MOVED responses.
+  local moved = {}
+
   -- | Sets up an event loop to respond to
   -- discovery broadcasts by sending an
   -- offer message listing the given
   -- handlers.
   function modem.offer(handlers)
+    local done = false
     modem.open(t.DISCOVER_CHAN)
-    while true do
-      local _, side, sChan, rChan, msg =
-        os.pullEvent("modem_message")
-      if sChan == t.DISCOVER_CHAN then
-        local offer = parseDiscover(msg)
-        if offer ~= nil then
-          modem.transmit(
-            rChan, 0,
-            offer.replyCode .. " " ..
-            textutils.serialize(
-              handlers
+    while not done do
+      local e, side, sChan, rChan, msg =
+        os.pullEvent()
+      if e == "tnet_finish" then
+        done = true
+      elseif e == "modem_message" then
+        if sChan == t.DISCOVER_CHAN then
+          local offer = parseDiscover(msg)
+          if offer ~= nil then
+            modem.transmit(
+              rChan, 0,
+              offer.replyCode .. " " ..
+              textutils.serialize(
+                handlers
+              )
             )
-          )
+          else
+            print(
+              "failed to parse discover"
+            )
+          end
         end
       end
     end
@@ -164,7 +197,7 @@ function t.initModem(modem)
   -- server replies with a malformed offer.
   function modem.discover(timeout)
     timeout = timeout or t.DEFAULT_TIMEOUT
-    local replyCode = t.makeReplyCode()
+    local replyCode = makeReplyCode()
     modem.open(t.OFFER_CHAN)
     modem.transmit(
       t.DISCOVER_CHAN, t.OFFER_CHAN,
@@ -184,14 +217,21 @@ function t.initModem(modem)
           if sChan == t.OFFER_CHAN then
             if replyCode2 == replyCode then
               if data ~= nil then
-                data = textutils.unserialize(data)
+                data =
+                  textutils.unserialize(
+                    data
+                  )
                 if data then
-                  for _, x in ipairs(data) do
+                  for _, x
+                    in ipairs(data)
+                  do
                     table.insert(offers, x)
                   end
                 end
               else
-                print("failed to parse offer")
+                print(
+                  "failed to parse offer"
+                )
               end
             end
           end
@@ -212,11 +252,27 @@ function t.initModem(modem)
   -- Something has to
   -- be sent due to the shitty regex-based
   -- parser that we use.
-  function modem.request(action, data, timeout)
+  function modem.request(
+      action,
+      data,
+      timeout
+  )
+    if moved[action] ~= nil then
+      return modem.request(
+        moved[action],
+        data,
+        timeout
+      )
+    end
+
     data = data or {}
     timeout = timeout or t.DEFAULT_TIMEOUT
 
-    local replyCode = t.makeReplyCode()
+    -- save the initial timeout value since
+    -- the timeout can be changed by WAIT
+    local initialTimeout = timeout
+
+    local replyCode = makeReplyCode()
 
     modem.open(t.RESPONSE_CHAN)
     modem.transmit(
@@ -226,35 +282,110 @@ function t.initModem(modem)
       textutils.serialize(data)
     )
 
+    -- store an action string here if we
+    -- want to perform another request at
+    -- the end of this one, such as for the
+    -- MOVED, FOUND, and REPEAT status
+    -- codes.
+    local nextAction = nil
+
+    -- the response produced by the server
     local response = nil
+
+    -- use the parallel API to deal with
+    -- timeouts.
     local fn = parallel.waitForAny(
       function()
-        response = nil
         while response == nil do
           local _, side, sChan,
             rChan, msg =
               os.pullEvent("modem_message")
-          response =
-            parseResponse(msg)
-          if response.replyCode ~= replyCode then
-            response = nil
+
+          if rChan == t.RESPONSE_CHAN then
+            response =
+              parseResponse(msg)
+
+            -- if we get responses to
+            -- requests we didn't send, keep
+            -- looping
+            if response.replyCode ~=
+                replyCode
+            then
+              response = nil
+            else
+              -- if the server returns WAIT
+              if response.status ==
+                  tnet.statusCode.WAIT
+              then
+                -- boost the timeout
+                timeout = timeout +
+                  response.timeout
+                -- keep looping
+                response = nil
+              end
+            end
           end
         end
+
         return response
       end,
       function()
-        sleep(timeout)
+        while timeout > 0 do
+          -- timeout might increase
+          -- concurrently due to WAIT
+          -- while we're asleep, so we save
+          -- the current timeout before we
+          -- go to sleep
+          local time = timeout
+          sleep(time)
+          -- decrease the possibly new
+          -- timeout by the time we spent
+          -- sleeping
+          timeout = timeout - time
+        end
       end
     )
     modem.close(t.RESPONSE_CHAN)
 
     if fn == 2 then
       response = {
-        status = t.statusCode.TIMEOUT
+        status = tnet.statusCode.TIMEOUT
       }
+      return response
     end
 
-    return response
+    if response.status ==
+        tnet.statusCode.MOVED
+    then
+      moved[action] =
+        response.action
+      return modem.request(
+        response.action,
+        request,
+        initialTimeout
+      )
+    end
+
+    if response.status ==
+        tnet.statusCode.FOUND
+    then
+      return modem.request(
+        response.action,
+        request,
+        initialTimeout
+      )
+    end
+
+    if response.status ==
+        tnet.statusCode.REPEAT
+    then
+      sleep(response.timeout)
+      return modem.response(
+        action,
+        request,
+        timeout
+      )
+    end
   end
 
   -- | Sets up an event loop to await for
@@ -279,32 +410,42 @@ function t.initModem(modem)
         modem.open(t.REQUEST_CHAN)
         local done = false
         while not done do
-          local _, side, sChan,
+          local e, side, sChan,
             rChan, msg =
-            os.pullEvent("modem_message")
-          local request =
-            parseRequest(msg)
-          local handler =
-            handlers[request.action] or handlers["*"]
-          if handler then
-            local status, data =
-              handler(
-                textutils.unserialize(
-                  request.data
+            os.pullEvent()
+          if e == "tnet_finish" then
+            done = true
+          elseif e == "modem_message" then
+            local request =
+              parseRequest(msg)
+            local handler =
+              handlers[request.action] or handlers["*"]
+            if handler then
+              local status, data =
+                handler(
+                  textutils.unserialize(
+                    request.data
+                  )
                 )
-              )
 
-            if status == t.statusCode.FINISH then
-              done = true
-              status = t.statusCode.OK
-            end
+              if status ==
+                  t.statusCode.ABORT
+              then
+                done = true
+                status = t.statusCode.OK
+              end
 
-            if status ~= t.statusCode.IGNORE then
-              modem.transmit(rChan, 0,
-                request.replyCode .. " " ..
-                tostring(status) .. " " ..
-                tostring(data)
-              )
+              if status ~=
+                  t.statusCode.IGNORE
+              then
+                modem.transmit(
+                  rChan,
+                  0,
+                  request.replyCode .. " " ..
+                  tostring(status) .. " " ..
+                  tostring(data)
+                )
+              end
             end
           end
         end
