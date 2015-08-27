@@ -1,5 +1,7 @@
 local tput = {}
 
+tput.VERSION = t.Version.new({ 0, 0, 1, 0 })
+
 tput.CONNECTION = {
   HOST = "localhost",
   PORT = 8080
