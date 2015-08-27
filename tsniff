@@ -3,8 +3,11 @@
 -- usage: tsniff [-v] [ACTION...]
 
 local t = loadfile("libt")()
+  or error("failed to load libt")
 local tnet = t.require("libtnet")
+  or error("failed to load libtnet")
 local modem = peripheral.find("modem")
+  or error("no modem found")
 local args = { ... }
 local actions = {}
 
