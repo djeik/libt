@@ -1,21 +1,22 @@
 local t = loadfile("libt")()
-if t == nil then
-  print("libt not available")
-  return nil
-end
+  or error("failed to load libt")
 
 local tput = t.require("libtput")
-if tput == nil then
-  print("libtput not availe")
-  return nil
-end
+  or error("failed to load libtput")
 
 local args = { ... }
 
 if args[1] == nil then
-  print("usage: ", shell.getRunningProgram(), " FILE")
+  print(
+    "usage: ",
+    shell.getRunningProgram(),
+    " FILE"
+  )
   return nil
 end
+
 if not tput.get(args[1]) then
   print("failed")
 end
+
+-- vim: ft=lua shiftwidth=2 expandtab colorcolumn=45 tw=44
