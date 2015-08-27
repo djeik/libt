@@ -7,7 +7,7 @@ local forceReload = args[1]
 local t = {}
 
 -- | The version of libt
-t.VERSION = { 0, 0, 1, 0 }
+t.VERSION = { 0, 0, 2, 0 }
 
 -- Initialize the modules cache
 if libtmodules == nil or forceReload then
@@ -31,7 +31,12 @@ end
 -- | Creates an iterator for the keys in a
 -- table
 function t.ikeys(tab)
-  return t.from(t.keys(tab))
+  return t.imap(
+    pairs(tab),
+    function(_, v)
+      return v
+    end
+  )
 end
 
 -- | Creates a new table by running a
@@ -47,11 +52,11 @@ end
 -- | Maps a function inside an iterator.
 function t.imap(it, func)
   return function()
-    local x = it()
-    if x == nil then
+    local x = {it()}
+    if x[1] == nil then
       return nil
     else
-      return func(x)
+      return func(unpack(x))
     end
   end
 end
