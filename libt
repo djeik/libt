@@ -6,8 +6,77 @@ local forceReload = args[1]
 -- Initialize the T module
 local t = {}
 
+-- Set up the versioning system
+local Version = {}
+t.Version = Version
+
+Version.mt = {
+  __le = function(a, b)
+    for v1, v2 in t.imap(
+      t.from(t.zip(a, b)),
+      unpack
+    ) do
+      if v1 < v2 then
+        return true
+      elseif v1 > v2 then
+        return false
+      end
+    end
+    -- then they are equal
+    return true
+  end,
+  __lt = function(a, b)
+    for v1, v2 in t.imap(
+      t.from(t.zip(a, b)),
+      unpack
+    ) do
+      if v1 < v2 then
+        return true
+      elseif v1 > v2 then
+        return false
+      end
+    end
+    -- then they are equal
+    return false
+  end,
+  __eq = function(a, b)
+    return t.all(
+      t.zip(a, b),
+      function(v1, v2)
+        return v1 == v2
+      end
+    )
+  end
+}
+
+function Version.new(tab)
+  local version = {}
+  setmetatable(tab, Version.mt)
+  return tab
+end
+
 -- | The version of libt
-t.VERSION = { 0, 0, 2, 0 }
+t.VERSION = t.Version.new({ 0, 1, 0, 0 })
+
+-- Initialize the modules cache and check
+-- whether libt is already loaded.
+--
+-- libt is the only library that gets stored
+-- *directly* into the libtmodules cache.
+-- Other libtmodules must first be indexed
+-- by their version.
+if libtmodules == nil or forceReload then
+  libtmodules = {
+    t = t
+  }
+else
+  -- if the cached version has a greater or
+  -- equal version, then we don't need to
+  -- bother loading the rest of libt.
+  if t.VERSION <= libtmodules.t.VERSION then
+    return libtmodules.t
+  end
+end
 
 -- | Directories in which to search for
 -- libraries
@@ -15,15 +84,6 @@ t.LIBRARY_PATH = {
   "/lib",
   "/"
 }
-
--- Initialize the modules cache
-if libtmodules == nil or forceReload then
-  _G['libtmodules'] = {
-    t = t
-  }
-else
-  return libtmodules.t
-end
 
 -- | Produces a table of the keys in a
 -- table.
@@ -135,7 +195,7 @@ function t.spaceSplit(str)
   return string.gmatch(str, "(%S+)")
 end
 
-function compose(i, fns)
+local function compose(i, fns)
   if i == #fns then
     return fns[i]
   else
@@ -164,27 +224,215 @@ function t.findModule(name)
   return nil
 end
 
--- | Loads a T module.
+-- | Find the first element of a table
+-- satisfying a predicate.
+-- If no predicate is given, returns the
+-- first truthy value in the table.
+-- If no value can be found, returns nil,
+-- so don't try t.find(tab, t.isNil) !
+function t.find(tab, pred)
+  pred = pred or t.id
+
+  for x in t.from(tab) do
+    if pred(x) then
+      return x
+    end
+  end
+
+  return nil
+end
+
+-- | Loads a libt module.
 -- Does not account for circular imports, so
 -- don't make cycles!
-function t.require(name)
+-- An inclusive lower bound on the version
+-- can be given as the second argument, and
+-- an exclusive upper bound on the version
+-- can be given as a third argument.
+function t.require(name, v1, v2)
   local m = libtmodules[name]
-  if m == nil then
-    local path = t.findModule(name)
-    if path ~= nil then
-      local f = loadfile(name)
-      if f ~= nil then
-        m = f()
-        libtmodules[name] = m
+
+  if m ~= nil then
+    for v, mod in pairs(m) do
+      if v1 ~= nil then
+        if v1 <= v then
+          if v2 ~= nil then
+            if v < v2 then
+              return m
+            end
+          else -- don't care about upper
+            return m
+          end
+        end
+      else -- don't care about lower
+        return m
       end
+    end
+
+    -- no cached version is acceptable
+  end
+
+  -- search for a module in the filesystem
+  local path = t.findModule(name)
+
+  if path == nil then
+    return nil
+  end
+
+  local f = loadfile(name)
+  if f == nil then
+    return nil
+  end
+
+  m = f()
+  if v1 < m.VERSION
+    and
+    m.VERSION < v2
+  then
+    if libtmodules[name] == nil then
+      libtmodules[name] = {}
+    end
+    libtmodules[name][m.VERSION] = m
+    return m
+  else
+    return nil
+  end
+end
+
+-- | Stick all the elements of the second
+-- table onto the end of the first table.
+function t.extend(tab1, tab2)
+  for _, v in ipairs(tab2) do
+    table.insert(tab1, v)
+  end
+end
+
+-- | Turn a function of many arguments into
+-- a function that takes a table by
+-- composing with unpack.
+--
+-- forall f. forall x.
+--   (t.unpackC(t.packC(f)))(x) == f(x)
+function t.unpackC(func)
+  return function(tab)
+    return func(unpack(tab))
+  end
+end
+
+-- | Turn a function that accepts a table
+-- into a function of many arguments by
+-- composing with pack.
+--
+-- forall f. forall x.
+--   (t.unpackC(t.packC(f)))(x) == f(x)
+function t.packC(func)
+  return function(...)
+    return func(pack(arg))
+  end
+end
+
+-- | The identity function. Returns its
+-- argument unchanged.
+function t.id(x)
+  return x
+end
+
+-- | Checks that all elements of a table
+-- satisfy a predicate. If no predicate is
+-- given, elements are checked on the basis
+-- of their truthiness.
+function t.all(tab, func)
+  func = func or t.id
+
+  for v in t.from(tab) do
+    if not func(v) then
+      return false
+    end
+  end
+
+  return true
+end
+
+-- | Checks that there is at least one
+-- element of a table satisfying a
+-- predicate. If no predicate is given,
+-- elements are checked on the basis on
+-- their truthiness.
+function t.any(tab, func)
+  func = func or t.id
+
+  for v in t.from(tab) do
+    if func(v) then
+      return true
+    end
+  end
+
+  return false
+end
+
+-- | Perform a left fold of a table.
+function t.fold(tab, func, start)
+  for v in t.from(tab) do
+    start = func(start, v)
+  end
+  return start
+end
+
+function t.min(tab, func)
+  it = t.from(tab)
+  if func ~= nil then
+    it = t.imap(it, func)
+  end
+  local m = tab[1]
+  for x in it do
+    if x < m then
+      m = x
     end
   end
   return m
 end
 
-function t.extend(tab1, tab2)
-  for _, v in ipairs(tab2) do
-    table.insert(tab1, v)
+function t.len(ts)
+  return #ts
+end
+
+function t.zip(...)
+  local n = t.min(arg, t.len)
+
+  local result = {}
+  for i=1, n do
+    table.insert(result, {tab1[i], tab2[i]})
+  end
+
+  return result
+end
+
+function t.call(f)
+  return f()
+end
+
+function t.apply(...)
+  return function(f)
+    return f(unpack(arg))
+  end
+end
+
+function t.eq(x)
+  return function(y)
+    return x == y
+  end
+end
+
+t.isNil = t.eq(nil)
+
+function t.izip(...)
+  return function()
+    local xs = t.map(arg, call)
+    if any(xs, isNil) then
+      return nil
+    else
+      return unpack(xs)
+    end
   end
 end
 
