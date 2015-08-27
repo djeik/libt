@@ -2,7 +2,7 @@ local t = loadfile("libt")()
 
 local tnet = {}
 
-tnet.VERSION = t.Version.new({ 0, 0, 1, 0 })
+tnet.VERSION = { 0, 0, 1, 0 }
 
 -- | Collection of status codes for T
 -- networking stack.

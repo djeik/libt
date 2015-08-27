@@ -7,56 +7,57 @@ local forceReload = args[1]
 local t = {}
 
 -- Set up the versioning system
-local Version = {}
-t.Version = Version
+t.Version = {}
 
-Version.mt = {
-  __le = function(a, b)
-    for v1, v2 in t.imap(
-      t.from(t.zip(a, b)),
-      unpack
-    ) do
-      if v1 < v2 then
-        return true
-      elseif v1 > v2 then
-        return false
-      end
+t.Version.le = function(a, b)
+  for v1, v2 in t.imap(
+    t.from(t.zip(a, b)),
+    unpack
+  ) do
+    if v1 < v2 then
+      return true
+    elseif v1 > v2 then
+      return false
     end
-    -- then they are equal
-    return true
-  end,
-  __lt = function(a, b)
-    for v1, v2 in t.imap(
-      t.from(t.zip(a, b)),
-      unpack
-    ) do
-      if v1 < v2 then
-        return true
-      elseif v1 > v2 then
-        return false
-      end
-    end
-    -- then they are equal
-    return false
-  end,
-  __eq = function(a, b)
-    return t.all(
-      t.zip(a, b),
-      function(v1, v2)
-        return v1 == v2
-      end
-    )
   end
-}
+  -- then they are equal
+  return true
+end
 
-function Version.new(tab)
-  local version = {}
-  setmetatable(tab, Version.mt)
-  return tab
+t.Version.lt = function(a, b)
+  for v1, v2 in t.imap(
+    t.from(t.zip(a, b)),
+    unpack
+  ) do
+    if v1 < v2 then
+      return true
+    elseif v1 > v2 then
+      return false
+    end
+  end
+  -- then they are equal
+  return false
+end
+
+t.Version.eq = function(a, b)
+  return t.all(
+    t.zip(a, b),
+    function(v1, v2)
+      return v1 == v2
+    end
+  )
+end
+
+t.Version.gt = function(a, b)
+  return not t.Version.le(a, b)
+end
+
+t.Version.ge = function(a, b)
+  return not t.Version.lt(a, b)
 end
 
 -- | The version of libt
-t.VERSION = t.Version.new({ 0, 1, 0, 0 })
+t.VERSION = { 0, 1, 0, 0 }
 
 -- Initialize the modules cache and check
 -- whether libt is already loaded.
@@ -65,18 +66,7 @@ t.VERSION = t.Version.new({ 0, 1, 0, 0 })
 -- *directly* into the libtmodules cache.
 -- Other libtmodules must first be indexed
 -- by their version.
-if libtmodules == nil or forceReload then
-  libtmodules = {
-    t = t
-  }
-else
-  -- if the cached version has a greater or
-  -- equal version, then we don't need to
-  -- bother loading the rest of libt.
-  if t.VERSION <= libtmodules.t.VERSION then
-    return libtmodules.t
-  end
-end
+libtmodules = libtmodules or {}
 
 -- | Directories in which to search for
 -- libraries
@@ -254,21 +244,21 @@ function t.require(name, v1, v2)
 
   if m ~= nil then
     for v, mod in pairs(m) do
+      local v = textutils.unserialize(v)
       if v1 ~= nil then
-        if v1 <= v then
+        if t.Version.le(v1, v) then
           if v2 ~= nil then
-            if v < v2 then
-              return m
+            if t.Version.lt(v, v2) then
+              return mod
             end
           else -- don't care about upper
-            return m
+            return mod
           end
         end
       else -- don't care about lower
-        return m
+        return mod
       end
     end
-
     -- no cached version is acceptable
   end
 
@@ -279,23 +269,47 @@ function t.require(name, v1, v2)
     return nil
   end
 
-  local f = loadfile(name)
+  -- try to parse the file
+  local f = loadfile(path)
   if f == nil then
     return nil
   end
 
+  -- load the library
   m = f()
-  if v1 < m.VERSION
-    and
-    m.VERSION < v2
-  then
+  if m.VERSION == nil then
+    print(
+      "warning: module ", name,
+      " does not declare a version"
+    )
+    m.VERSION = { 0, 0, 0, 0 }
+  end
+
+  local found = nil
+
+  if v1 ~= nil then
+    if t.Version.le(v1, m.VERSION) then
+      if v2 ~= nil then
+        if t.Version.lt(m.Version, v2) then
+          found = m
+        end
+      else
+        found = m
+      end
+    end
+  else
+    found = m
+  end
+
+  if found == nil then
+    return nil
+  else
     if libtmodules[name] == nil then
       libtmodules[name] = {}
     end
-    libtmodules[name][m.VERSION] = m
-    return m
-  else
-    return nil
+    local k = textutils.serialize(m.VERSION)
+    libtmodules[name][k] = found
+    return found
   end
 end
 
@@ -380,12 +394,10 @@ end
 
 function t.min(tab, func)
   it = t.from(tab)
-  if func ~= nil then
-    it = t.imap(it, func)
-  end
   local m = tab[1]
+  local fm = func(m)
   for x in it do
-    if x < m then
+    if func(x) < fm then
       m = x
     end
   end
@@ -397,7 +409,7 @@ function t.len(ts)
 end
 
 function t.zip(...)
-  local n = t.min(arg, t.len)
+  local n = t.min(t.map(arg, t.len))
 
   local result = {}
   for i=1, n do
