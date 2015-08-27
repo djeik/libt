@@ -122,7 +122,7 @@ function parseResponse(response)
   return {
     replyCode = replyCode,
     status = tonumber(status),
-    data = data
+    data = textutils.unserialize(data)
   }
 end
 
@@ -294,13 +294,6 @@ function tnet.init(modem)
       textutils.serialize(data)
     )
 
-    -- store an action string here if we
-    -- want to perform another request at
-    -- the end of this one, such as for the
-    -- MOVED, FOUND, and REPEAT status
-    -- codes.
-    local nextAction = nil
-
     -- the response produced by the server
     local response = nil
 
@@ -313,7 +306,7 @@ function tnet.init(modem)
             rChan, msg =
               os.pullEvent("modem_message")
 
-          if rChan == t.RESPONSE_CHAN then
+          if sChan == t.RESPONSE_CHAN then
             response =
               parseResponse(msg)
 
@@ -331,15 +324,13 @@ function tnet.init(modem)
               then
                 -- boost the timeout
                 timeout = timeout +
-                  response.timeout
+                  response.data.timeout
                 -- keep looping
                 response = nil
               end
             end
           end
         end
-
-        return response
       end,
       function()
         while timeout > 0 do
@@ -370,9 +361,9 @@ function tnet.init(modem)
         tnet.statusCode.MOVED
     then
       moved[action] =
-        response.action
+        response.data.action
       return modem.request(
-        response.action,
+        response.data.action,
         request,
         initialTimeout
       )
@@ -382,7 +373,7 @@ function tnet.init(modem)
         tnet.statusCode.FOUND
     then
       return modem.request(
-        response.action,
+        response.data.action,
         request,
         initialTimeout
       )
@@ -391,13 +382,15 @@ function tnet.init(modem)
     if response.status ==
         tnet.statusCode.REPEAT
     then
-      sleep(response.timeout)
+      sleep(response.data.timeout)
       return modem.response(
         action,
         request,
         timeout
       )
     end
+
+    return response.status, response.data
   end
 
   -- | Sets up an event loop to await for
@@ -444,7 +437,7 @@ function tnet.init(modem)
                   t.statusCode.ABORT
               then
                 done = true
-                status = t.statusCode.OK
+                status = t.statusCode.FAIL
               end
 
               if status ~=
@@ -455,7 +448,7 @@ function tnet.init(modem)
                   0,
                   request.replyCode .. " " ..
                   tostring(status) .. " " ..
-                  tostring(data)
+                  textutils.serialize(data)
                 )
               end
             end
@@ -474,5 +467,7 @@ tnet.parse.request = parseRequest
 tnet.parse.response = parseResponse
 tnet.parse.offer = parseOffer
 tnet.parse.discover = parseDiscover
+
+return tnet
 
 -- vim: ft=lua shiftwidth=2 expandtab colorcolumn=45 tw=44
