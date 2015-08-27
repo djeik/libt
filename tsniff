@@ -22,7 +22,7 @@ actions = args
 function parseReplyCode(code)
   local match = string.gmatch(
     code,
-    "%d+-%d"
+    "(%d+)-(%d+)"
   )
   local id, seq = match()
   local result = {}
@@ -47,12 +47,20 @@ printers[tnet.REQUEST_CHAN] = function(req)
     local replyCode = parseReplyCode(
       request.replyCode
     )
-    print(
-      replyCode.id, " ",
-      "(", replyCode.seq, ")",
-      " -> ",
-      request.action
-    )
+    if replyCode == nil then
+      print("failed to parse reply code ",
+        request.replyCode
+      )
+      return false
+    else
+      print(
+        replyCode.id, " ",
+        "(", replyCode.seq, ")",
+        " -> ",
+        request.action
+      )
+      return true
+    end
   end
 end
 
@@ -69,14 +77,23 @@ printers[tnet.RESPONSE_CHAN] = function(
     local replyCode = parseReplyCode(
       response.replyCode
     )
-    print(
-      replyCode.id, " ",
-      "(", replyCode.seq, ")",
-      " <- ",
-      response.action, " ",
-      "(", response.status, ")"
-    )
-    return true
+    if replyCode == nil then
+      print(
+        "Failed to parse reply code ",
+        response.replyCode
+      )
+      return false
+    else
+      print(
+        replyCode.id, " ",
+        "(", replyCode.seq, ")",
+        " <- ",
+        response.status,
+        " ",
+        response.data
+      )
+      return true
+    end
   end
 end
 
