@@ -9,6 +9,13 @@ local t = {}
 -- | The version of libt
 t.VERSION = { 0, 0, 2, 0 }
 
+-- | Directories in which to search for
+-- libraries
+t.LIBRARY_PATH = {
+  "/lib",
+  "/"
+}
+
 -- Initialize the modules cache
 if libtmodules == nil or forceReload then
   _G['libtmodules'] = {
@@ -144,18 +151,32 @@ function t.c(...)
   return compose(1, arg)
 end
 
+-- | Searches for a module in the library
+-- search path and returns its path if it can
+-- be found. Else, returns nil.
+function t.findModule(name)
+  for dir in t.from(t.LIBRARY_PATH) do
+    local path = fs.combine(dir, name)
+    if fs.exists(path) then
+      return path
+    end
+  end
+  return nil
+end
+
 -- | Loads a T module.
 -- Does not account for circular imports, so
 -- don't make cycles!
 function t.require(name)
   local m = libtmodules[name]
   if m == nil then
-    local f = loadfile(name)
-    if f == nil then
-      m = nil
-    else
-      m = f()
-      libtmodules[name] = m
+    local path = t.findModule(name)
+    if path ~= nil then
+      local f = loadfile(name)
+      if f ~= nil then
+        m = f()
+        libtmodules[name] = m
+      end
     end
   end
   return m
