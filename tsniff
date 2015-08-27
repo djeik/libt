@@ -57,7 +57,9 @@ printers[tnet.REQUEST_CHAN] = function(req)
         replyCode.id, " ",
         "(", replyCode.seq, ")",
         " -> ",
-        request.action
+        request.action,
+        " ",
+        request.data
       )
       return true
     end
