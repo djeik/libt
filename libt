@@ -398,7 +398,12 @@ function t.fold(tab, func, start)
   return start
 end
 
+-- | Finds the minimal value in a table,
+-- using a given key.
 function t.min(tab, func)
+  if func == nil then
+    func = t.id
+  end
   it = t.from(tab)
   if func == nil then
     func = t.id
@@ -413,10 +418,13 @@ function t.min(tab, func)
   return m
 end
 
+-- | Get the length of a table.
 function t.len(ts)
   return #ts
 end
 
+-- | Zip two tables together into a table of
+-- pairs.
 function t.zip(...)
   local tabs = { ... }
   local n = t.min(t.map(tabs, t.len))
@@ -437,24 +445,30 @@ function t.zip(...)
   return result
 end
 
+-- | Invokes a function with no arguments.
 function t.call(f)
   return f()
 end
 
+-- | Create a function that applies the
+-- given arguments to a given function.
 function t.apply(...)
   return function(f)
     return f(unpack(arg))
   end
 end
 
+-- | Curried equality checking.
 function t.eq(x)
   return function(y)
     return x == y
   end
 end
 
+-- | Check whether a value is nil.
 t.isNil = t.eq(nil)
 
+-- | Zip tables together into an iterator.
 function t.izip(...)
   return function()
     local xs = t.map(arg, call)
