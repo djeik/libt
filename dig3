@@ -1,0 +1,181 @@
+local x, y, z, force = ...
+local fuelEstimate = x * y * z / 3
+
+local oldUp = turtle.up
+turtle.up = function()
+  print("moving up")
+  oldUp()
+end
+
+local usage = {
+  "dig3: hollow out an area by 3-height levels",
+  "  usage: dig3 x y z ['force']",
+  "  y < 0 => dig downward",
+  "  y > 0 => dig upward",
+  "  z < 0 => dig leftward",
+  "  z > 0 => dig rightward",
+  "  force => skip fuel check"
+}
+
+
+force = force == "force"
+
+if 
+  not force 
+  and turtle.getFuelLevel() < fuelEstimate
+then
+  print("Insufficient fuel. Needs ", fuelEstimate)
+  return nil
+end
+
+local detect = {
+  up = turtle.detectUp,
+  down = turtle.detectDown,
+  forward = turtle.detect
+}
+
+local function safeDig(dig, detect)
+  while detect() do
+    dig()
+  end
+end
+
+local dig = {
+  up = function(safe)
+    if safe then
+      safeDig(turtle.digUp, detect.up)
+    else
+      turtle.digUp()
+    end
+  end,
+  down = turtle.digDown,
+  forward = function(safe)
+    if safe then
+      safeDig(turtle.dig, detect.forward)
+    else
+      turtle.dig()
+    end
+  end
+}
+
+local move = {
+  up = turtle.up,
+  down = turtle.down,
+  forward = turtle.forward
+}
+
+local turn = {
+  left = turtle.turnLeft,
+  right = turtle.turnRight,
+  around = function()
+    turtle.turnLeft()
+    turtle.turnLeft()
+  end
+}
+
+function digUpDown()
+  dig.up(true)
+  dig.down()
+end
+
+function fullMove()
+  digUpDown()
+  dig.forward(true)
+  move.forward()
+end
+
+function digLevel(x, z, flip)
+  local i = 0
+  local j = 0
+
+  local turns = {
+    turn.right,
+    turn.left
+  }
+
+  for i=1,z do
+    for j=1,x do
+      fullMove()
+    end
+
+    if i ~= z then
+      local t = turns[
+        2 - ((i + flip) % 2)
+      ]
+      t()
+      fullMove()
+      t()
+    end
+  end
+end
+
+function replicateM(n, f)
+  local i = 0
+  for i=1, n do
+    f()
+  end
+end
+
+function main(x, y, z)
+  local vertical = nil
+  if y < 0 then
+    vertical = function()
+      dig.down()
+      move.down()
+    end
+  else
+    vertical = function()
+      dig.up(true)
+      move.up()
+    end
+  end
+
+  local majorFlip = 0
+  if z < 0 then
+    majorFlip = 1
+  else
+    majorFlip = 0
+  end
+  z = math.abs(z)
+
+  local v = function()
+    replicateM(3, vertical)
+  end
+
+  y = math.abs(y)
+
+  local i = 0
+  for i=1,y do
+    if
+      i % 2 == 0
+      and
+      z % 2 == 0
+    then
+      flip = 1
+    else
+      flip = 0
+    end
+    digLevel(x, z, majorFlip + flip)
+    turn.around()
+
+    digUpDown()
+    if i ~= y then
+      v()
+    end
+  end
+end
+
+if
+  x ~= nil
+  and
+  y ~= nil
+  and
+  z ~= nil
+then
+  x = tonumber(x)
+  y = tonumber(y)
+  z = tonumber(z)
+  main(x, y, z)
+end
+
+-- vim: ft=lua shiftwidth=2 expandtab colorcolumn=45 tw=44
