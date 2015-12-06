@@ -1,0 +1,3 @@
+for _, v in ipairs(rs.getSides()) do
+  rs.setOutput(v, false)
+end
