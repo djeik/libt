@@ -400,6 +400,9 @@ end
 
 function t.min(tab, func)
   it = t.from(tab)
+  if func == nil then
+    func = t.id
+  end
   local m = tab[1]
   local fm = func(m)
   for x in it do
