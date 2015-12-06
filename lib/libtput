@@ -7,20 +7,26 @@ tput.CONNECTION = {
   PORT = 8080
 }
 
-function mkUrl(file)
+function mkUrl(append)
   return "http://" ..
     tput.CONNECTION.HOST ..
     ":" ..
     tostring(tput.CONNECTION.PORT) ..
+    append
+end
+
+function mkFileUrl(file)
+  return mkUrl(
     "/files/" ..
     textutils.urlEncode(file)
+  )
 end
 
 -- | Downloads a file and saves it to disk.
 -- Returns a boolean representing success.
 function tput.get(file)
   local result = http.get(
-    mkUrl(file),
+    mkFileUrl(file),
     {
       Accept = "*/*"
     }
@@ -48,13 +54,33 @@ function tput.put(file)
 
   -- send the POST request
   local result = http.post(
-    mkUrl(file),
+    mkFileUrl(file),
     text,
     headers
   )
 
   -- return the result
   return result
+end
+
+function tput.list()
+  local headers = {}
+  headers["Content-type"] = "text/plain; charset=utf-8"
+  headers["Accept"] = "text/plain; charset=utf-8"
+
+  local result = http.get(
+    mkUrl("/list"),
+    {
+      Accept = "*/*"
+    }
+  )
+
+  if result == nil then
+    return false
+  end
+
+  local s = result.readAll()
+  return s
 end
 
 return tput
