@@ -106,6 +106,12 @@ function t.map(array, func)
   return result
 end
 
+function t.forEach(array, func)
+  for _, v in ipairs(array) do
+    func(v)
+  end
+end
+
 -- | Maps a function inside an iterator.
 function t.imap(it, func)
   return function()
