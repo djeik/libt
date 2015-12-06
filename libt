@@ -418,11 +418,20 @@ function t.len(ts)
 end
 
 function t.zip(...)
-  local n = t.min(t.map(arg, t.len))
+  local tabs = { ... }
+  local n = t.min(t.map(tabs, t.len))
+
+  local function zipAt(i)
+    local tuple = {}
+    for j=1,#tabs do
+      table.insert(tuple, tabs[j][i])
+    end
+    return tuple
+  end
 
   local result = {}
   for i=1, n do
-    table.insert(result, {tab1[i], tab2[i]})
+    table.insert(result, zipAt(i))
   end
 
   return result
