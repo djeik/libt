@@ -1,0 +1,15 @@
+local t = loadfile("libt")()
+  or error("failed to load libt")
+
+local tput = t.require("libtput")
+  or error("failed to load libtput")
+
+local files = tput.list()
+
+if files then
+  print(files)
+else
+  print("Failed to get listing.")
+end
+
+-- vim: ft=lua shiftwidth=2 expandtab colorcolumn=45 tw=44
