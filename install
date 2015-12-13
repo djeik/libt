@@ -1,0 +1,13 @@
+local function cp(f)
+  if fs.exists(f) then
+    print("Skipping "..f)
+  else
+    fs.copy("/disk"..f, f)
+  end
+end
+
+cp("/lib")
+cp("/libt")
+cp("/tg")
+cp("/tp")
+cp("/tls")
