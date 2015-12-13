@@ -1,0 +1,78 @@
+local t = loadfile("libt")()
+  or error("Failed to load libt.")
+
+local modem = peripheral.find("modem")
+  or error("No attached modem.")
+
+local PIXEL_CHAN = 16
+local LAMP_SIDE = "back"
+local CONFIG_PATH = "/config"
+local CONFIG
+
+local function loadConfig()
+  local h = fs.open(CONFIG_PATH, 'r')
+  if not h then
+    error("Failed to load configuration.")
+  end
+  CONFIG = textutils.unserialize(h.readAll())
+  h.close()
+end
+
+local function setLamp(state)
+  rs.setOutput(LAMP_SIDE, state)
+  print("Setting lamp ", state)
+end
+
+local handlers = {
+  reboot = function()
+    os.reboot()
+  end,
+  pixel = function(req)
+    print(req.image[CONFIG.Y])
+    print(req.image[CONFIG.Y][CONFIG.Z])
+    setLamp(
+      req.image[CONFIG.Y][CONFIG.Z] == 1
+    )
+    return true
+  end
+}
+
+local function handle(req)
+  if not req.type then
+    print("No request type.")
+    return nil
+  end
+
+  local handler = handlers[req.type]
+
+  if not handler then
+    print("Invalid request type ", req.type)
+    return nil
+  end
+
+  return handler(req.data)
+end
+
+local function main()
+  loadConfig()
+
+  print("Starting pixel ", CONFIG.Y, ' ', CONFIG.Z)
+
+  modem.open(PIXEL_CHAN)
+
+  while true do
+    local e, side, schan, rchan, msg =
+      os.pullEvent("modem_message")
+    print("Received message.")
+    if not handle(msg) then
+      print("Failed to handle message:")
+      print(textutils.serialize(msg))
+    end
+  end
+end
+
+while true do
+  pcall(main)
+end
+
+-- vim: ft=lua shiftwidth=2 expandtab colorcolumn=45 tw=44

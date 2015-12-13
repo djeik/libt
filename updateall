@@ -1,0 +1,148 @@
+local t = loadfile("libt")()
+  or error("Failed to load libt.")
+
+local DISK_SLOT = 1
+local FLOPPY_SLOT = 2
+local COMPUTER_SLOT = 3
+
+local y0, z0, y, z = ...
+
+local usage = {
+  "updateall: update all the marquee computers.",
+  "  usage: updateall <y0> <z0> <y> <z>",
+}
+
+local function showUsage()
+  t.forEach(usage, print)
+end
+
+if not y0 or not z0 or not y or not z then
+  showUsage()
+  return nil
+end
+
+local function generateConfig(y, z)
+  return textutils.serialize({
+    Y = y,
+    Z = z,
+  })
+end
+
+local function generateBootstrap()
+  local text = {
+    "shell.run('tg', 'pixel')",
+    "shell.run('pixel')",
+  }
+  return t.fold(text, function(text, line)
+    return text .. line .. "\n"
+  end, "")
+end
+
+local function generateInstaller()
+  local text = {
+    "shell.run('rm', '/pixel')",
+    "shell.run('cp', '/disk/pixel', '/pixel')",
+    "shell.run('rm', '/startup')",
+    "shell.run('cp', '/disk/bootstrap', '/startup')",
+    "shell.run('rm', '/config')",
+    "shell.run('cp', '/disk/config', '/config')",
+  }
+  return t.fold(text, function(text, line)
+    return text .. line .. '\n'
+  end, "")
+end
+
+local Y = tonumber(y)
+local Z = tonumber(z)
+
+local BOOTSTRAP_CODE = generateBootstrap()
+local INSTALLER_CODE = generateInstaller()
+
+local h
+
+local function initializeFloppy()
+  local h
+
+  print("Initializing disk.")
+
+  turtle.select(DISK_SLOT)
+  turtle.placeDown()
+  turtle.select(FLOPPY_SLOT)
+  turtle.dropDown()
+
+  h = fs.open("/disk/startup", 'w')
+  h.write(INSTALLER_CODE)
+  h.close()
+
+  h = fs.open("/disk/bootstrap", 'w')
+  h.write(BOOTSTRAP_CODE)
+  h.close()
+
+  turtle.suckDown()
+  turtle.select(DISK_SLOT)
+  turtle.digDown()
+end
+
+local function main()
+  initializeFloppy()
+
+  for z=z0,Z do
+    for y=y0,Y do
+      if turtle.getItemCount(COMPUTER_SLOT) > 0 then
+        error("Computer slot is nonempty.")
+      end
+
+      turtle.select(COMPUTER_SLOT)
+      turtle.dig()
+      turtle.placeDown()
+      turtle.back()
+      turtle.select(DISK_SLOT)
+      turtle.placeDown()
+      turtle.select(FLOPPY_SLOT)
+      turtle.dropDown()
+
+      -- generate the config
+      local config = generateConfig(y, z)
+      h = fs.open("/disk/config", 'w')
+      h.write(config)
+      h.close()
+
+      turtle.forward()
+      local computer =
+        peripheral.wrap("bottom")
+      computer.turnOn()
+      os.sleep(0.1) -- let the computer install from the disk
+
+      -- put the computer back
+      turtle.digDown()
+      turtle.place()
+
+      -- go get back the floppy and drive
+      turtle.back()
+      turtle.select(FLOPPY_SLOT)
+      turtle.suckDown()
+
+      turtle.select(DISK_SLOT)
+      turtle.digDown()
+      turtle.forward()
+
+      if y < Y then
+        turtle.up()
+      end
+
+      print(y, ", ", z)
+    end
+
+    for y=1,Y-1 do
+      turtle.down()
+    end
+
+    turtle.turnRight()
+    turtle.forward()
+    turtle.turnLeft()
+  end
+end
+
+main()
+
+-- vim: ft=lua shiftwidth=2 expandtab colorcolumn=45 tw=44
