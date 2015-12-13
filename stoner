@@ -1,0 +1,76 @@
+local chest = peripheral.wrap("bottom")
+local size = chest.getInventorySize()
+
+local slots = {
+  2, 3, 5, 6, 7, 9, 10, 11
+}
+
+local function condenseCobblestone()
+  local q = turtle.getItemCount(1)
+  if q % 9 ~= 0 then
+    error("Trying to condense stuff not multiple of nine.")
+  end
+  local q = math.floor(q / 9)
+  for i, slot in ipairs(slots) do
+    turtle.transferTo(slot, q)
+  end
+  return true
+end
+
+local function cleanInventory()
+  for j=1,16 do
+    turtle.select(j)
+    turtle.dropDown()
+  end
+end
+
+local function isCompressible(stack)
+  return stack.qty > 9 and (
+    stack.name == "cobblestone"
+    or
+    stack.name == "gravel"
+    or
+    (
+      stack.name == "cobblestone_compressed"
+      and
+      not stack.ore_dict.compressedGravel2x
+      and
+      not stack.ore_dict.compressedCobblestone8x
+      and
+      not stack.ore_dict.compressedDirt4x
+    )
+    or
+    stack.name == "dirt"
+  )
+end
+
+local function main()
+  while true do
+    chest.condenseItems()
+    for i=1,size do
+      local r, stack = pcall(function()
+        return chest.getStackInSlot(i)
+      end)
+      if r and stack and isCompressible(stack) then
+        local q = stack.qty - (stack.qty % 9)
+        chest.swapStacks(i, 1)
+        turtle.select(1)
+        turtle.suckDown(q)
+        if condenseCobblestone() then
+          turtle.select(16)
+          turtle.craft()
+          turtle.dropDown()
+        end
+      else
+        print("Stack ", i, " is invalid.")
+      end
+    end
+    sleep(1)
+  end
+end
+
+while true do
+  main()
+end
+
+-- vim: ft=lua shiftwidth=2 expandtab colorcolumn=45 tw=44
