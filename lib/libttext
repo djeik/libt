@@ -219,10 +219,22 @@ local emptyColumn = {
   {0}
 }
 
+local function flipText(textArray)
+  local result = {}
+  for row in t.from(textArray) do
+    table.insert(result, 1, {})
+    for cell in t.from(row) do
+      table.insert(result[1], 1, cell)
+    end
+  end
+  return result
+end
+
+
 -- | Produces a 2D array representing the
 -- given string in a way that can be
 -- printed to a lamp marquee.
-function ttext.render(s)
+function ttext.render(s, flip)
   local result = {
     {}, {}, {}, {}, {}
   }
@@ -239,6 +251,10 @@ function ttext.render(s)
       or error("Unknown character " .. c)
     adjoin(char)
     adjoin(emptyColumn)
+  end
+
+  if flip then
+    result = flipText(result)
   end
 
   return result

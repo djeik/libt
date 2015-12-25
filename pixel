@@ -9,6 +9,22 @@ local LAMP_SIDE = "back"
 local CONFIG_PATH = "/config"
 local CONFIG
 
+local COMP_SIDES = {
+  "top",
+  "bottom",
+  "left",
+  "right"
+}
+
+local function activateAdjacent()
+  -- for s in t.from(COMP_SIDES) do
+  --   local p = peripheral.wrap(s)
+  --   if p and p.reboot then
+  --     p.reboot()
+  --   end
+  -- end
+end
+
 local function loadConfig()
   local h = fs.open(CONFIG_PATH, 'r')
   if not h then
@@ -55,6 +71,7 @@ end
 
 local function main()
   loadConfig()
+  activateAdjacent()
 
   print("Starting pixel ", CONFIG.Y, ' ', CONFIG.Z)
 

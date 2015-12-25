@@ -14,12 +14,12 @@ local args = { ... }
 local input = t.fold(
   args,
   function(s, x)
-    return s..x.." "
+    return s..x
   end,
   ""
 )
 
-local tab = ttext.render(input)
+local tab = ttext.render(input, true)
 
 modem.transmit(CHAN, 0, {
   type = 'pixel',

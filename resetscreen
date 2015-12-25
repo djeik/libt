@@ -1,0 +1,13 @@
+local t = loadfile("libt")()
+  or error("Failed to load libt.")
+
+local modem = peripheral.find("modem")
+  or error("No attached modem.")
+
+local CHAN = 16
+
+modem.transmit(CHAN, 0, {
+  type = 'reboot'
+})
+
+-- vim: ft=lua shiftwidth=2 expandtab colorcolumn=45 tw=44
