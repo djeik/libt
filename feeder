@@ -1,0 +1,19 @@
+local t = loadfile("libt")()
+  or error("Failed to load libt.")
+
+local FEED_SLOT = 1
+local FEED_DELAY = 5
+
+turtle.select(FEED_SLOT)
+while true do
+  while turtle.getItemCount(FEED_SLOT) > 0 do
+    turtle.placeDown()
+    os.sleep(FEED_DELAY)
+  end
+  while not turtle.suckUp() do
+    print("No food in chest.")
+    os.sleep(FEED_DELAY)
+  end
+end
+
+-- vim: ft=lua shiftwidth=2 expandtab colorcolumn=45 tw=44
