@@ -1,0 +1,42 @@
+local side = ...
+if side == nil then
+  side = "bottom"
+end
+local chest = peripheral.wrap(side)
+  or error("No chest on side " .. side)
+local size = chest.getInventorySize()
+
+local function sort()
+  local minslot
+  local minstack
+
+  for i=1,size do
+    r, stack = pcall(function()
+      return chest.getStackInSlot(i)
+    end)
+    if r and stack then
+      if minslot == nil then
+        minslot = i
+        minstack = stack
+      elseif stack.qty < minstack.qty then
+        minslot = i
+        minstack = stack
+      end
+    end
+  end
+
+  if minslot ~= nil and minslot ~= 1 then
+    chest.swapStacks(1, minslot)
+    return true
+  else
+    return false
+  end
+end
+
+while true do
+  if not sort() then
+    sleep(3)
+  end
+end
+
+-- vim: ft=lua shiftwidth=2 expandtab colorcolumn=45 tw=44

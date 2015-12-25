@@ -470,12 +470,57 @@ t.isNil = t.eq(nil)
 
 -- | Zip tables together into an iterator.
 function t.izip(...)
+  local args = arg
   return function()
-    local xs = t.map(arg, call)
+    local xs = t.map(args, t.call)
     if any(xs, isNil) then
       return nil
     else
       return unpack(xs)
+    end
+  end
+end
+
+function t.range(n)
+  local r = {}
+  for i=1,n do
+    table.insert(r, i)
+  end
+  return r
+end
+
+function t.xrange(n)
+  local r = 1
+  return function()
+    if r > n then
+      return nil
+    else
+      local x = r
+      r = r + 1
+      return x
+    end
+  end
+end
+
+function t.sortChest(chest)
+  local size = chest.getInventorySize()
+  for i=1,size-1 do
+    local s1 = chest.getStackInSlot(i)
+    local q1 = 65
+    if s1 then q1 = s1.qty end
+
+    local s2i, q2 = nil, 64
+
+    for j=i+1,size do
+      s2 = chest.getStackInSlot(j)
+      if s2 and s2.qty < q2 then
+        q2 = s2.qty
+        s2i = j
+      end
+    end
+
+    if s2i ~= nil and q2 < q1 then
+      chest.swapStacks(i, s2i)
     end
   end
 end

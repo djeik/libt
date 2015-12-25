@@ -1,0 +1,10 @@
+turtle.select(1)
+turtle.drop()
+while true do
+  if turtle.suckDown() then
+    turtle.drop()
+  end
+  sleep(1)
+end
+
+-- vim: ft=lua shiftwidth=2 expandtab colorcolumn=45 tw=44
