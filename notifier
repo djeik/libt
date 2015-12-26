@@ -1,0 +1,69 @@
+local t = loadfile("libt")()
+  or error("Failed to load libt.")
+
+local tnet = t.require("libtnet")
+  or error("Failed to load libtnet.")
+
+local modem = peripheral.find("modem")
+  or error("No attached modem.")
+
+tnet.init(modem)
+
+local args = { ... }
+
+local action = args[1]
+table.remove(args, 1)
+
+local handlers = {}
+
+function handlers.add(args)
+  local subject = args[1]
+  local time = tonumber(args[2])
+  table.remove(args, 1)
+  table.remove(args, 1)
+  local message = t.fold(
+    args,
+    function(s, x)
+      return s..x.." "
+    end,
+    ""
+  )
+  local status, response = modem.request(
+    "enqueueNotify",
+    {
+      message = message,
+      subject = subject,
+      timeout = time,
+    }
+  )
+
+  print(status)
+  print(textutils.serialize(response))
+end
+
+function handlers.delete(args)
+  local id = args[1]
+
+  local status, response = modem.request(
+    "deleteNotify",
+    {
+      notificationId = tonumber(id),
+    }
+  )
+
+  print(status)
+  print(textutils.serialize(response))
+end
+
+function handlers.list()
+  local status, response = modem.request(
+    "listNotify"
+  )
+
+  print(status)
+  print(textutils.serialize(response))
+end
+
+handlers[action](args)
+
+-- vim: ft=lua shiftwidth=2 expandtab colorcolumn=45 tw=44

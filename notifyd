@@ -1,0 +1,167 @@
+local GLASS_SIDE = "right"
+local Y_OFFSET = 50
+local LINE_HEIGHT = 12
+local SUBJECT_MARGIN = 5
+
+local t = loadfile("libt")()
+  or error("Failed to load libt.")
+
+local tnet = t.require("libtnet")
+  or error("Failed to load libtnet.")
+
+local modem = peripheral.find("modem")
+  or error("No attached modem.")
+
+local p = peripheral.wrap(GLASS_SIDE)
+
+tnet.init(modem)
+
+local handlers = {}
+local notifications = {}
+local timers = {}
+
+local NOTIFICATION_ID = 0
+
+local function nextLine(offset)
+  offset.y = offset.y + LINE_HEIGHT
+end
+
+local function drawSubject(offset, name, notifications)
+  p.addText(offset.x, offset.y, name)
+  nextLine(offset)
+  for n in t.from(notifications) do
+    p.addText(offset.x + SUBJECT_MARGIN, offset.y, n.message)
+    nextLine(offset)
+  end
+  return size
+end
+
+local function drawNotifications()
+  local offset = { x = 5, y = Y_OFFSET }
+  for subjName, subject in pairs(notifications) do
+    drawSubject(offset, subjName, subject) 
+    offset.y = offset.y + SUBJECT_MARGIN
+  end
+end
+
+local function redraw()
+  p.clear()
+  drawNotifications()
+  p.sync()
+end
+
+local function nextNotificationId()
+  NOTIFICATION_ID = NOTIFICATION_ID + 1
+  return NOTIFICATION_ID - 1
+end
+
+local function notify(subject, message, timeout)
+  if notifications[subject] == nil then
+    notifications[subject] = {}
+  end
+
+  local notification = {
+    message = message,
+    createdAt = t.now(),
+    id = nextNotificationId(),
+  }
+
+  table.insert(
+    notifications[subject],
+    notification
+  )
+
+  if timeout == nil then
+    return
+  end
+
+  print("Scheduling timer ", timeout, "s")
+  local timer = os.startTimer(tonumber(timeout))
+  timers[timer] = notification
+
+  redraw()
+
+  return notification.id
+end
+
+local function removeNotificationBrute(id)
+  print("Deleting notification ", id)
+  local found
+  for subjName, subject in pairs(notifications) do
+    for i, notification in ipairs(subject) do
+      if notification.id == id then
+        found = i
+        break
+      end
+    end
+    if found ~= nil then
+      table.remove(subject, found)
+      if #subject == 0 then
+        notifications[subjName] = nil
+      end
+      break
+    end
+  end
+  return found ~= nil
+end
+
+local function removeNotification(id, subject)
+  -- todo use subject to speed up delete
+  local s = removeNotificationBrute(id)
+  if s then
+    redraw()
+  end
+  return s
+end
+function handlers.enqueueNotify(data)
+  local msg = data.message
+  local subject = data.subject
+  local timeout = data.timeout
+
+  local id = notify(subject, msg, timeout)
+
+  print("Added notification.")
+
+  return tnet.statusCode.OK, {
+    notificationId = id,
+  }
+end
+
+function handlers.deleteNotify(data)
+  local id = data.notificationId
+  local subject = data.subject
+
+  local success = removeNotification(id, subject)
+
+  return tnet.statusCode.OK, {
+    success = success
+  }
+end
+
+function handlers.listNotify(data)
+  return tnet.statusCode.OK, notifications
+end
+
+parallel.waitForAll(
+  function()
+    modem.listen(handlers)
+  end,
+  function()
+    while true do
+      local e, timerId = os.pullEvent("timer")
+      local notification = timers[timerId]
+      if notification ~= nil then
+        print(
+          "Executing scheduled removal of #",
+          notification.id
+        )
+        removeNotification(
+          notification.id,
+          notification.subject
+        )
+      end
+    end
+  end
+)
+
+-- vim: ft=lua shiftwidth=2 expandtab colorcolumn=45 tw=44
