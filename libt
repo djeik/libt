@@ -525,6 +525,13 @@ function t.sortChest(chest)
   end
 end
 
+function t.now()
+  return {
+    day = os.day(),
+    time = os.time(),
+  }
+end
+
 return t
 
 -- vim: ft=lua shiftwidth=2 expandtab colorcolumn=45 tw=44
