@@ -469,11 +469,15 @@ end
 t.isNil = t.eq(nil)
 
 -- | Zip tables together into an iterator.
+-- Each iteration returns as many values as
+-- there are tables.
+-- As soon as any of the tables is
+-- exhausted, the iterator ends.
 function t.izip(...)
-  local args = arg
+  local args = { ... }
   return function()
     local xs = t.map(args, t.call)
-    if any(xs, isNil) then
+    if t.any(xs, t.isNil) then
       return nil
     else
       return unpack(xs)
