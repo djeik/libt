@@ -17,12 +17,12 @@ local COMP_SIDES = {
 }
 
 local function activateAdjacent()
-  -- for s in t.from(COMP_SIDES) do
-  --   local p = peripheral.wrap(s)
-  --   if p and p.reboot then
-  --     p.reboot()
-  --   end
-  -- end
+  for s in t.from(COMP_SIDES) do
+    local p = peripheral.wrap(s)
+    if p and p.reboot then
+      p.turnOn()
+    end
+  end
 end
 
 local function loadConfig()
