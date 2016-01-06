@@ -45,6 +45,7 @@ local function drawNotifications()
 end
 
 local function redraw()
+  print("Redrawing screen.")
   p.clear()
   drawNotifications()
   p.sync()
@@ -71,6 +72,8 @@ local function notify(subject, message, timeout)
     notification
   )
 
+  redraw()
+
   if timeout == nil then
     return
   end
@@ -78,8 +81,6 @@ local function notify(subject, message, timeout)
   print("Scheduling timer ", timeout, "s")
   local timer = os.startTimer(tonumber(timeout))
   timers[timer] = notification
-
-  redraw()
 
   return notification.id
 end
