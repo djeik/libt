@@ -1,0 +1,35 @@
+local t = loadfile("libt")()
+  or error("Failed to load libt.")
+
+local text = t.require("libttext")
+  or error("Failed to load libttext.")
+
+local modem = peripheral.find("modem")
+  or error("No attached modem.")
+
+local CHAN = 16
+
+local args = { ... }
+
+local input = t.fold(
+  args,
+  function(s, x)
+    return s..x.." "
+  end,
+  ""
+)
+
+local tab = text.render(input)
+
+for frame in text.scroll(tab, 1, 19) do
+  local flipped = text.flip(frame)
+  modem.transmit(CHAN, 0, {
+    type = 'pixel',
+    data = {
+      image = flipped
+    },
+  })
+  os.sleep(0.05)
+end
+
+-- vim: ft=lua shiftwidth=2 expandtab colorcolumn=45 tw=44
