@@ -237,6 +237,8 @@ local function flipText(textArray)
   return result
 end
 
+ttext.flip = flipText
+
 
 -- | Produces a 2D array representing the
 -- given string in a way that can be
