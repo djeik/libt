@@ -283,6 +283,52 @@ function ttext.print(rendered)
   print("")
 end
 
+-- | From an image, produce an iterator that
+-- emits successive frames of an animation
+-- of that image shifting over by a given
+-- amount each time.
+function ttext.scroll(image, shiftW, windowW)
+  -- create a table for each row
+  local output = t.map(image, function() return {} end)
+
+  local function isEmpty()
+    return not t.any(output, function(row)
+      return t.any(row, function(cell)
+        return cell == 1
+      end)
+    end)
+  end
+
+  local i = 1
+
+  return function()
+    if i > #image[1] then
+      if isEmpty() then
+        return nil
+      else
+        for out in t.from(output) do
+          table.insert(out, 0)
+          if #out > windowW then
+            table.remove(out, 1)
+          end
+        end
+        return output
+      end
+    end
+
+    for out, input in t.izip(t.from(output), t.from(image)) do
+      table.insert(out, input[i])
+
+      if #out > windowW then
+        table.remove(out, 1)
+      end
+    end
+
+    i = i + 1
+    return output
+  end
+end
+
 return ttext
 
 -- vim: ft=lua shiftwidth=2 expandtab colorcolumn=45 tw=44
