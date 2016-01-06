@@ -64,6 +64,12 @@ function handlers.list()
   print(textutils.serialize(response))
 end
 
-handlers[action](args)
+local handler = handlers[action]
+
+if handler == nil then
+  print("Invalid command.")
+else
+  handlers[action](args)
+end
 
 -- vim: ft=lua shiftwidth=2 expandtab colorcolumn=45 tw=44
