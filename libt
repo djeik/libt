@@ -529,11 +529,38 @@ function t.sortChest(chest)
   end
 end
 
+-- | Sequences the given iterators into a
+-- single iterator.
+function t.chain(...)
+  local iterators = { ... }
+  local i = 1
+  return function()
+    while i <= #iterators do
+      local x = iterators[i]()
+      if x ~= nil then
+        return x
+      else
+        i = i + 1
+      end
+    end
+    return nil
+  end
+end
+
 function t.now()
   return {
     day = os.day(),
     time = os.time(),
   }
+end
+
+function t.intercalate(sep, tab)
+  local acc = ""
+  for i=1,#tab-1 do
+    acc = acc .. tab[i] .. sep
+  end
+  acc = acc .. tab[#tab]
+  return acc
 end
 
 return t
