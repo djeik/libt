@@ -1,0 +1,26 @@
+local tmsg = {}
+
+tmsg.CONNECTION = {
+    HOST = "localhost",
+    PORT = 8080
+}
+
+function mkUrl(id)
+  return "http://" ..
+  tmsg.CONNECTION.HOST .. ":" ..
+  tostring(tmsg.CONNECTION.PORT) ..
+  "/msg/" .. id
+end
+
+function tmsg.send(id, msg)
+  result = http.post(mkUrl(id), msg)
+  if result == nil then
+    return false
+  return true
+end
+
+function tmsg.recv(id)
+  return http.get(mkUrl(id), { Accept = "*/*" })
+end
+
+-- vim: ft=lua shiftwidth=2 expandtab colorcolumn=45

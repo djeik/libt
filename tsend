@@ -1,0 +1,22 @@
+local t = loadfile("libt")()
+if t == nil then
+  print("libt not available")
+  return nil
+end
+
+local tmsg = t.require("libtmsg")
+if tmsg == nil then
+  print("libtmsg not availe")
+  return nil
+end
+
+local args = { ... }
+
+if args[1] == nil then
+  print("usage: ", shell.getRunningProgram(), " [message]")
+  return nil
+end
+
+if not tmsg.send(os.getComputerID, args[1]) then
+  print("failed")
+end
