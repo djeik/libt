@@ -7,7 +7,7 @@ tput.CONNECTION = {
   PORT = 8080
 }
 
-function mkUrl(append)
+local function mkUrl(append)
   return "http://" ..
     tput.CONNECTION.HOST ..
     ":" ..
@@ -15,7 +15,7 @@ function mkUrl(append)
     append
 end
 
-function mkFileUrl(file)
+local function mkFileUrl(file)
   return mkUrl(
     "/files/" ..
     textutils.urlEncode(file)

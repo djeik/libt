@@ -1,4 +1,5 @@
 local t = loadfile("libt")()
+
 if t == nil then
   print("libt not available")
   return nil
@@ -13,10 +14,10 @@ end
 local args = { ... }
 
 if args[1] == nil then
-  print("usage: ", shell.getRunningProgram(), " [message]")
+  print("usage: ", shell.getRunningProgram(), " [recipient_id] [message]")
   return nil
 end
 
-if not tmsg.send(os.getComputerID, args[1]) then
+if not tmsg.send(args[1], args[2]) then
   print("failed")
 end

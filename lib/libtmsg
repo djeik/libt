@@ -1,11 +1,13 @@
 local tmsg = {}
 
+tmsg.VERSION = { 0, 0, 1, 0 }
+
 tmsg.CONNECTION = {
     HOST = "localhost",
     PORT = 8080
 }
 
-function mkUrl(id)
+local function mkUrl(id)
   return "http://" ..
   tmsg.CONNECTION.HOST .. ":" ..
   tostring(tmsg.CONNECTION.PORT) ..
@@ -13,14 +15,24 @@ function mkUrl(id)
 end
 
 function tmsg.send(id, msg)
-  result = http.post(mkUrl(id), msg)
+  local headers = {}
+  headers["Content-type"] = "text/plain; charset=utf-8"
+  headers["Accept"] = "text/plain; charset=utf-8"
+  result = http.post(mkUrl(id), msg, headers)
   if result == nil then
     return false
+  end
   return true
 end
 
 function tmsg.recv(id)
-  return http.get(mkUrl(id), { Accept = "*/*" })
+  local result = http.get(mkUrl(id), { Accept = "*/*" })
+  if result == nil then
+    return nil
+  end
+  return result.readAll()
 end
+
+return tmsg
 
 -- vim: ft=lua shiftwidth=2 expandtab colorcolumn=45

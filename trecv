@@ -12,11 +12,11 @@ end
 
 local args = { ... }
 
-result = tmsg.recv(os.getComputerID)
+result = tmsg.recv(os.getComputerID())
 
 if not result then
   print("failed")
   return
   else
-  print result
+  print(result)
 end
