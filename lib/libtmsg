@@ -14,7 +14,8 @@ local function mkUrl(id)
   "/msg/" .. id
 end
 
-function tmsg.send(id, msg)
+function tmsg.send(id, tab)
+  local msg = textutils.serialise(tab)
   local headers = {}
   headers["Content-type"] = "text/plain; charset=utf-8"
   headers["Accept"] = "text/plain; charset=utf-8"
@@ -30,7 +31,11 @@ function tmsg.recv(id)
   if result == nil then
     return nil
   end
-  return result.readAll()
+  local f = result.readAll()
+  if f == "" then
+    return nil
+  end
+  return f
 end
 
 return tmsg

@@ -1,0 +1,18 @@
+local t = loadfile("libt")()
+  or error("failed to load libt")
+
+local tmsg = t.require("libtmsg")
+  or error("failed to load libtmsg")
+
+local tcho = {}
+
+tcho.VERSION = {0, 0, 1, 0}
+
+function tcho.handle(msg)
+  local f = loadstring(msg.code)
+  return f(unpack(msg.params))
+end
+
+return tcho
+
+-- vim: ft=lua shiftwidth=2 expandtab colorcolumn=45 tw=44

@@ -11,13 +11,11 @@ if tmsg == nil then
   return nil
 end
 
-local args = { ... }
+local test = {
+    code = "print('hello from the loadstring')",
+    params = {}
+}
 
-if args[1] == nil then
-  print("usage: ", shell.getRunningProgram(), " [recipient_id] [message]")
-  return nil
-end
-
-if not tmsg.send(args[1], args[2]) then
+if not tmsg.send("9", test) then
   print("failed")
 end

@@ -1,0 +1,23 @@
+local t = loadfile("libt")()
+  or error("failed to load libt")
+
+local tmsg = t.require("libtmsg")
+  or error("failed to load libtmsg")
+
+local tcho = t.require("libtcho")
+  or error("failed to load handlers")
+
+while true do
+  local flag = true
+  local msg = tmsg.recv(os.getComputerID())
+  if msg == nil then
+    flag = false
+  end
+
+  if flag then
+    local result = tcho.handle(textutils.unserialize(msg))
+    tmsg.send("Hive", result)
+  end
+
+end
+-- vim: ft=lua shiftwidth=2 expandtab colorcolumn=45 tw=44
