@@ -1,0 +1,26 @@
+-- ^ Loads core Atuin modules
+
+local t = loadfile("libt")()
+  or error("failed to load libt")
+
+local modules = {
+  "world",
+  "direction",
+  "vec3",
+  "tmove",
+}
+
+local atuin = t.tableFromAssocs(
+  t.map(
+    modules,
+    function(m)
+      return {m, t.requireStrict("lib" .. m)}
+    end
+  )
+)
+
+atuin.VERSION = { 0, 0, 1, 0 }
+
+return atuin
+
+-- vim: ft=lua shiftwidth=2 expandtab colorcolumn=45 tw=44

@@ -1,0 +1,272 @@
+local t = loadfile("libt")()
+  or error("Failed to load libt.")
+
+local vec3 = t.require("libvec3")
+  or error("failed to load libvec3")
+
+local dir = t.require("libdirection")
+  or error("failed to load libdirection")
+
+local cont = t.requireStrict("libcontainers")
+
+local world = {}
+
+world.VERSION = { 0, 0, 1, 0 }
+
+world.CHUNK_SIZE = 8
+
+world.CHUNK_TYPE = {
+  UNEXPLORED = 1,
+  MINING = 2,
+  CLEARED = 3,
+  STORAGE = 4,
+  TREE_FARM = 5,
+  HOME = 6,
+}
+
+world.WORLD = cont.defaultdict.new(
+  function()
+    return cont.defaultdict.new(
+      function()
+        return {}
+      end,
+      true
+    ),
+    true
+  end
+)
+
+-- | Aligns a coordinate to the grid.
+function world.alignCoord(x)
+  return math.floor(x / world.CHUNK_SIZE)
+    * world.CHUNK_SIZE
+end
+
+-- | Creates an array of chunk offsets that
+-- represent a slice of a chunk. A slice is
+-- a two-dimensional subset of a chunk.
+-- The parameter k is a dictionary
+-- containing a key "x", "y", or "z" mapped
+-- to the value to fix that axis at.
+function world.sliceOffsets(k)
+  local mk = nil
+  if k.x ~= nil then
+    mk = function(i, j)
+      return vec3.new(k.x, i, j)
+    end
+  elseif k.y ~= nil then
+    mk = function(i, j)
+      return vec3.new(i, k.y, j)
+    end
+  elseif k.z ~= nil then
+    mk = function(i, j)
+      return vec3.new(i, j, k.z)
+    end
+  else
+    error("invalid axis to fix for slice")
+  end
+
+  local coords = {}
+
+  for i=1,world.CHUNK_SIZE do
+    for j=1,world.CHUNK_SIZE do
+      table.insert(coords, mk(i, j))
+    end
+  end
+
+  return coords
+end
+
+world.ROAD_OFFSETS = (function()
+  function mk(fix)
+    return t.arrayToSet(
+      world.sliceOffsets(fix)
+    )
+  end
+
+  return t.union(
+    mk({x = world.CHUNK_SIZE - 1}),
+    mk({y = world.CHUNK_SIZE - 1}),
+    mk({z = world.CHUNK_SIZE - 1})
+  )
+end)()
+
+function world.chunkVector()
+  return vec3.new(
+    world.CHUNK_SIZE,
+    world.CHUNK_SIZE,
+    world.CHUNK_SIZE
+  )
+end
+
+-- | Creates a new chunk at the given
+-- coordinates. The caller guarantees that
+-- these coordinates are aligned to the
+-- chunk grid.
+function world.newChunk(coords)
+  local chunk = {
+    -- the *chunk* coordinates
+    coords = coords,
+    -- the absolute coordinates of the
+    -- chunk's corner
+    globalCoords = coords * world.CHUNK_SIZE,
+    type = world.CHUNK_TYPE.UNEXPLORED,
+    contents = t.transformi3(
+      t.makeArray3(
+        world.CHUNK_SIZE,
+        world.CHUNK_SIZE,
+        world.CHUNK_SIZE
+      ),
+      world.newBlock
+    ),
+    objects = {}
+  }
+
+  function chunk.getBlock(coords)
+    return chunk.contents[c.x][c.y][c.z]
+  end
+
+  -- | Adds the given object to this chunk.
+  -- The object can be any lua table
+  -- provided it has an attribute called
+  -- `coords` containing the list of
+  -- coordinates it resides at within the
+  -- chunk, relative to the chunk's origin.
+  function chunk.addObject(obj)
+    table.insert(chunk.objects, obj)
+    for c in t.from(coords) do
+      table.insert(chunk.getBlock(c).objects, obj)
+    end
+  end
+
+  return chunk
+end
+
+-- | Creates a new block with the given
+-- coordinates and whose properties are
+-- copied from an existing block. If the
+-- existing block is nil, then the new block
+-- is given unknown properties.
+function world.newBlock(x, y, z, copy)
+  local b = {
+    x = x,
+    y = y,
+    z = z,
+    objects = {}
+  }
+
+  if copy == nil then
+    b.properties = nil
+  else
+    b.properties = copy.properties
+  end
+
+  return b
+end
+
+-- | Returns the chunk containing the given
+-- point.
+function world.getChunk(p)
+  local x_ = math.floor(p.x / world.CHUNK_SIZE)
+  local y_ = math.floor(p.y / world.CHUNK_SIZE)
+  local z_ = math.floor(p.z / world.CHUNK_SIZE)
+  local chunk = world.WORLD[x_][y_][z_]
+
+  if chunk == nil then
+    chunk = world.newChunk(
+      vec3.new(x_, y_, z_)
+    )
+    world.WORLD[x_][y_][z_] = chunk
+  end
+
+  return chunk
+end
+
+-- | Gets the block at the given
+-- coordinates.
+function world.getBlock(p)
+  local chunk = world.getChunk(p)
+  return chunk.getBlock(
+    p - chunk.globalCoords
+  )
+end
+
+-- | Computes a path to leave the chunk from
+-- the given position and the given facing.
+function world.pathfindLeaveChunk(p, f)
+  local current = vec3.dup(p)
+  local chunk = world.getChunk(p)
+
+  local visited = {}
+  visited[textutils.serialize(c)] = true
+
+  function loop()
+     
+  end
+
+  for d in t.ivalues(world.DIRECTION) do
+    local dv = world.DIRVEC[d]
+  end
+end
+
+-- | Decides whether the given point is a
+-- road-block. The point is interpreted as
+-- an absolute coordinate.
+function world.isRoadBlock(p)
+  local chunk = world.getChunk(p)
+  local offset = p - chunk.globalCoords
+  return t.setMember(
+    offset,
+    world.ROAD_OFFSETS
+  )
+end
+
+-- | Computes a path between two points.
+-- This path is guaranteed to traverse only
+-- road-blocks of chunks. The two given
+-- points must be themselves road-blocks.
+function world.pathfindBetweenChunks(p1, p2)
+  if not world.isRoadBlock(p1) then
+    error("chunk pathfind start is not a road")
+  end
+
+  if not world.isRoadBlock(p2) then
+    error("chunk pathfind end is not a road")
+  end
+
+  local path = {}
+  local here = vec3.dup(p1)
+
+  while here.x < p2.x do
+    table.insert(path, dir.EAST) 
+    here = here + dir.tovec(dir.EAST)
+  end
+  while here.x > p2.x do
+    table.insert(path, dir.WEST)
+    here = here + dir.tovec(dir.WEST)
+  end
+
+  while here.y < p2.y do
+    table.insert(path, dir.UP) 
+    here = here + dir.tovec(dir.UP)
+  end
+  while here.y > p2.y do
+    table.insert(path, dir.DOWN)
+    here = here + dir.tovec(dir.DOWN)
+  end
+
+  while here.z < p2.z do
+    table.insert(path, dir.SOUTH) 
+    here = here + dir.tovec(dir.SOUTH)
+  end
+  while here.z > p2.z do
+    table.insert(path, dir.NORTH)
+    here = here + dir.tovec(dir.NORTH)
+  end
+
+  return path
+end
+
+return world
+
+-- vim: ft=lua shiftwidth=2 expandtab tw=44

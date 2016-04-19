@@ -1,0 +1,28 @@
+local t = loadfile("libt")()
+  or error("failed to load libt")
+
+local cont = {}
+
+cont.VERSION = { 0, 0, 1, 0 }
+
+cont.defaultdict = {}
+
+function cont.defaultdict.new(callable, setback)
+  local dict = {}
+  setmetatable(
+    dict, {
+      __index = function(tab, key)
+        local val = callable()
+        if setback then
+          tab[key] = val
+        end
+        return val
+      end
+    }
+  )
+  return dict
+end
+
+return cont
+
+-- vim: ft=lua shiftwidth=2 expandtab colorcolumn=45 tw=44

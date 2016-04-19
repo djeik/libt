@@ -1,0 +1,122 @@
+-- | libvec3 is a library for representing
+-- and manipulation three-dimensional
+-- vectors. The vectors are represented
+-- under the hood as plain tables with the
+-- keys "x", "y", and "z".
+
+local t = loadfile("libt")()
+  or error("failed to load libt")
+
+local vec3 = {}
+
+vec3.VERSION = { 0, 0, 1, 0 }
+
+-- | Creates a vector given "x", "y", and
+-- "z".
+function vec3.new(x, y, z)
+  local coords = nil
+
+  -- support calling new on a table
+  if type(x) == "table" then
+    return vec3.dup(x)
+  end
+
+  local coords = {
+    x = x,
+    y = y,
+    z = z,
+  }
+  setmetatable(coords, vec3.mt)
+  return coords
+end
+
+-- | Duplicates the given vector.
+function vec3.dup(v)
+  return vec3.new(v.x, v.y, v.z)
+end
+
+-- | Computes the straight-line distance
+-- between two points. Turtles do not travel
+-- in straight lines though, so this
+-- distance is not realistic.
+function vec3.distance(p1, p2)
+  function sq(x)
+    return x * x
+  end
+  return math.sqrt(
+    sq(p1.x - p2.x) +
+    sq(p1.y - p2.y) + 
+    sq(p1.z - p2.z)
+  )
+end
+
+-- | Computes the manhattan distance between
+-- two points. This is the exact number of
+-- blocks that must be travelled across to
+-- reach the point by a turtle.
+function vec3.manhattan(p1, p2)
+  return t.sum(
+    t.map(
+      vec3.toarray(p1 - p2),
+      math.abs
+    )
+  )
+end
+
+-- | Gets an array from the vector.
+function vec3.toarray(v)
+  return {v.x, v.y, v.z}
+end
+
+function vec3.fromarray(arr)
+  if #arr ~= 3 then
+    error("array has wrong size to be a vector")
+  end
+  return vec3.new(unpack(arr))
+end
+
+vec3.mt = {
+  __add = function(v1, v2)
+    return vec3.new(
+      v1.x + v2.x,
+      v1.y + v2.y,
+      v1.z + v2.z
+    )
+  end,
+  __sub = function(v1, v2)
+    return v1 + (-v2)
+  end,
+  __mul = function(x, y)
+    local v, k
+    if getmetatable(x) == vec3.mt then
+      v = x
+      k = y
+    elseif getmetatable(y) == vec3.mt then
+      v = y
+      k = x
+    else
+      error("scalar multiplication does not involve a vector")
+    end
+    k = tonumber(k)
+    if k == nil then
+      error("the scalar of a scalar multiplication is not a number")
+    end
+    return vec3.new(
+      v.x * k,
+      v.y * k,
+      v.z * k
+    )
+  end,
+  __unm = function(v)
+    return v * (-1)
+  end,
+  __eq = function(v1, v2)
+    return v1.x == v2.x and
+      v1.y == v2.y and
+      v1.z == v2.z
+  end
+}
+
+return vec3
+
+-- vim: ft=lua shiftwidth=2 expandtab tw=44

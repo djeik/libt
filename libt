@@ -66,7 +66,18 @@ t.VERSION = { 0, 1, 0, 0 }
 -- *directly* into the libtmodules cache.
 -- Other libtmodules must first be indexed
 -- by their version.
-libtmodules = libtmodules or {}
+
+function t.clearModuleCache()
+  _G["libtmodules"] = {}
+end
+
+
+if forceReload then
+  t.clearModuleCache()
+  print("libt reloaded")
+end
+
+local libtmodules = _G.libtmodules or {}
 
 -- | Directories in which to search for
 -- libraries
@@ -85,9 +96,9 @@ function t.keys(tab)
   return result
 end
 
--- | Creates an iterator for the keys in a
+-- | Creates an iterator for the values in a
 -- table
-function t.ikeys(tab)
+function t.ivalues(tab)
   return t.imap(
     pairs(tab),
     function(_, v)
@@ -104,12 +115,6 @@ function t.map(array, func)
     table.insert(result, func(v))
   end
   return result
-end
-
-function t.forEach(array, func)
-  for _, v in ipairs(array) do
-    func(v)
-  end
 end
 
 -- | Maps a function inside an iterator.
@@ -168,6 +173,15 @@ function t.from(array)
   end
 end
 
+-- | Constructs a function that checks
+-- whether its argument is equal to the
+-- supplied value.
+function t.eq(x)
+  return function(y)
+    return x == y
+  end
+end
+
 -- | Construct an array from an iterator.
 function t.consume(it)
   local result = {}
@@ -205,6 +219,47 @@ end
 -- The functions must all be unary.
 function t.c(...)
   return compose(1, arg)
+end
+
+-- | Makes a three-dimensional array with
+-- the given size.
+function t.makeArray3(x, y, z)
+  local arr = {}
+
+  for i=1,x do
+    local arrX = {}
+    for j=1,y do
+      local arrY = {}
+      for k=1,z do
+        table.insert(arrY, nil) 
+      end
+      table.insert(arrX, arrY)
+    end
+    table.insert(arr, arrX)
+  end
+
+  return arr
+end
+
+-- | Maps a function over every element of a
+-- three-dimensional array, passing in the
+-- coordinates of each element as well as
+-- the value.
+function t.transformi3(arr, f)
+  for i=1,#arr do
+    for j=1,#(arr[1]) do
+      for k=1,#(arr[1][1]) do
+        arr[i][j][k] =
+          f(i, j, k, arr[i][j][k])
+      end
+    end
+  end
+end
+
+function t.divmod(num, denom)
+  local div = math.floor(num / denom)
+  local mod = num % denom
+  return div, mod
 end
 
 -- | Searches for a module in the library
@@ -283,6 +338,9 @@ function t.require(name, v1, v2)
 
   -- load the library
   m = f()
+  if m == nil then
+    error("library " .. path .. " has no exports")
+  end
   if m.VERSION == nil then
     print(
       "warning: module ", name,
@@ -317,6 +375,11 @@ function t.require(name, v1, v2)
     libtmodules[name][k] = found
     return found
   end
+end
+
+function t.requireStrict(name, v1, v2)
+  return t.require(name, v1, v2)
+    or error("failed to load " .. name)
 end
 
 -- | Stick all the elements of the second
@@ -355,6 +418,15 @@ end
 -- argument unchanged.
 function t.id(x)
   return x
+end
+
+-- | Build a table from an association list.
+function t.tableFromAssocs(assocs)
+  local tab = {}
+  for tup in t.from(assocs) do
+    tab[tup[1]] = tup[2]
+  end
+  return tab
 end
 
 -- | Checks that all elements of a table
@@ -398,16 +470,26 @@ function t.fold(tab, func, start)
   return start
 end
 
--- | Finds the minimal value in a table,
--- using a given key.
+-- | Compute the sum of the elements in an
+-- array.
+function t.sum(tab)
+  return t.fold(
+    tab,
+    function(acc, x) return acc + x end,
+    0
+  )
+end
+
+function t.product(tab)
+  return t.fold(
+    tab,
+    function(acc, x) return acc * x end,
+    1
+  )
+end
+
 function t.min(tab, func)
-  if func == nil then
-    func = t.id
-  end
   it = t.from(tab)
-  if func == nil then
-    func = t.id
-  end
   local m = tab[1]
   local fm = func(m)
   for x in it do
@@ -418,66 +500,44 @@ function t.min(tab, func)
   return m
 end
 
--- | Get the length of a table.
 function t.len(ts)
   return #ts
 end
 
--- | Zip two tables together into a table of
--- pairs.
 function t.zip(...)
-  local tabs = { ... }
-  local n = t.min(t.map(tabs, t.len))
-
-  local function zipAt(i)
-    local tuple = {}
-    for j=1,#tabs do
-      table.insert(tuple, tabs[j][i])
-    end
-    return tuple
-  end
+  local n = t.min(t.map(arg, t.len))
 
   local result = {}
   for i=1, n do
-    table.insert(result, zipAt(i))
+    table.insert(result, {tab1[i], tab2[i]})
   end
 
   return result
 end
 
--- | Invokes a function with no arguments.
 function t.call(f)
   return f()
 end
 
--- | Create a function that applies the
--- given arguments to a given function.
 function t.apply(...)
+  local xs = arg
   return function(f)
-    return f(unpack(arg))
+    return f(unpack(xs))
   end
 end
 
--- | Curried equality checking.
 function t.eq(x)
   return function(y)
     return x == y
   end
 end
 
--- | Check whether a value is nil.
 t.isNil = t.eq(nil)
 
--- | Zip tables together into an iterator.
--- Each iteration returns as many values as
--- there are tables.
--- As soon as any of the tables is
--- exhausted, the iterator ends.
 function t.izip(...)
-  local args = { ... }
   return function()
-    local xs = t.map(args, t.call)
-    if t.any(xs, t.isNil) then
+    local xs = t.map(arg, call)
+    if any(xs, isNil) then
       return nil
     else
       return unpack(xs)
@@ -485,83 +545,38 @@ function t.izip(...)
   end
 end
 
-function t.range(n)
-  local r = {}
-  for i=1,n do
-    table.insert(r, i)
-  end
-  return r
-end
-
-function t.xrange(n)
-  local r = 1
-  return function()
-    if r > n then
-      return nil
-    else
-      local x = r
-      r = r + 1
-      return x
+-- | Compute a table that is the union of
+-- all given tables.
+function t.union(...)
+  local u = {}
+  for i, a in ipairs(arg) do
+    for k, _ in pairs(arg[i]) do
+      u[k] = true
     end
   end
+  return u
 end
 
-function t.sortChest(chest)
-  local size = chest.getInventorySize()
-  for i=1,size-1 do
-    local s1 = chest.getStackInSlot(i)
-    local q1 = 65
-    if s1 then q1 = s1.qty end
-
-    local s2i, q2 = nil, 64
-
-    for j=i+1,size do
-      s2 = chest.getStackInSlot(j)
-      if s2 and s2.qty < q2 then
-        q2 = s2.qty
-        s2i = j
-      end
-    end
-
-    if s2i ~= nil and q2 < q1 then
-      chest.swapStacks(i, s2i)
-    end
+-- | Convert an array into a set. The array
+-- is iterated with ipairs, and the values
+-- are serialized and used as keys mapping
+-- to true in a new table, which acts as a
+-- set.
+function t.arrayToSet(arr)
+  local set = {}
+  for k, v in ipairs(arr) do
+    set[textutils.serialize(v)] = true
   end
+  return set
 end
 
--- | Sequences the given iterators into a
--- single iterator.
-function t.chain(...)
-  local iterators = { ... }
-  local i = 1
-  return function()
-    while i <= #iterators do
-      local x = iterators[i]()
-      if x ~= nil then
-        return x
-      else
-        i = i + 1
-      end
-    end
-    return nil
-  end
+function t.setMember(elem, set)
+  return set[textutils.serialize(elem)]
+    or false
 end
 
-function t.now()
-  return {
-    day = os.day(),
-    time = os.time(),
-  }
-end
-
-function t.intercalate(sep, tab)
-  local acc = ""
-  for i=1,#tab-1 do
-    acc = acc .. tab[i] .. sep
-  end
-  acc = acc .. tab[#tab]
-  return acc
-end
+-- | Convenient.
+t.show = textutils.serialize
 
 return t
 

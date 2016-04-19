@@ -1,0 +1,162 @@
+-- | Utilities and constants for dealing
+-- with directions.
+
+local t = loadfile("libt")()
+  or error("failed to load libt")
+
+-- to support converting directions to unit
+-- vectors
+local vec3 = t.require("libvec3")
+  or error("failed to load libvec3")
+
+local dir = {}
+
+dir.VERSION = { 0, 0, 1, 0 }
+
+dir.SOUTH = 0
+dir.WEST = 1
+dir.NORTH = 2
+dir.EAST = 3
+dir.UP = 4
+dir.DOWN = 5
+
+-- | Array of all possible directions.
+dir.DIRECTIONS = {
+  dir.SOUTH,
+  dir.WEST,
+  dir.NORTH,
+  dir.EAST,
+  dir.UP,
+  dir.DOWN,
+}
+
+-- | Array of all possible facings.
+dir.FACINGS = {
+  dir.SOUTH,
+  dir.WEST,
+  dir.NORTH,
+  dir.EAST,
+}
+
+-- | Computes the facing obtained by turning
+-- left from the given facing.
+-- Results are undefined if the direction is
+-- UP or DOWN.
+function dir.turnLeft(f)
+  return (f - 1) % 4
+end
+
+-- | Computes the facing obtained by turning
+-- right from the given facing.
+-- Results are undefined if the direction is
+-- UP or DOWN.
+function dir.turnRight(f)
+  return (f + 1) % 4
+end
+
+-- | Given a path (a sequence of directions)
+-- and an initial facing of a turtle,
+-- generates a string interpretable by
+-- libtmove to move a turtle along the path.
+function dir.pathToTurtleMove(p, fi)
+  local f = fi
+  local move = ""
+  for d in t.from(p) do
+    local turn = dir.turn(f, d)
+    if dir.isHorizontal(d) then
+      f = d
+    end
+    move = move .. turn
+    if d == dir.UP then
+      move = move .. "u"
+    elseif d == dir.DOWN then
+      move = move .. "d"
+    else
+      move = move .. "f"
+    end
+  end
+  return move
+end
+
+-- | Decides whether a given number is a
+-- horizontal direction (i.e. a facing).
+function dir.isHorizontal(d)
+  return t.any(dir.FACINGS, t.eq(d))
+end
+
+-- | Decides whether a given number is a
+-- vertical direction.
+function dir.isVertical(d)
+  return t.any({dir.UP, dir.DOWN}, t.eq(d))
+end
+
+-- | Checks whether a given number is a
+-- valid direction.
+function dir.isValid(d)
+  return t.any(
+    t.map(
+      {dir.isHorizontal, dir.isVertical},
+      t.apply(d)
+    )
+  )
+end
+
+-- | Computes a tmove script to turn a
+-- turtle from one facing to another. The
+-- computer sequence of turns is optimal.
+function dir.turn(from, to)
+  local _ = t.all({from, to}, dir.isValid)
+    or error("direction to turn is invalid")
+
+  if dir.isVertical(from) or dir.isVertical(to) then
+    return ""
+  end
+
+  local turn = ""
+
+  while from ~= to do
+    turn = turn .. "r"
+    from = dir.turnRight(from)
+  end
+
+  if turn == "rrr" then
+    return "l"
+  else
+    return turn
+  end
+end
+
+-- | Computes the inverse of a direction.
+function dir.invert(f)
+  if f == dir.UP then
+    return dir.DOWN
+  elseif f == dir.DOWN then
+    return dir.UP
+  else
+    return (f + 2) % 4
+  end
+end
+
+local DIRVEC = {}
+DIRVEC[dir.SOUTH]
+  = vec3.new(0, 0, 1)
+DIRVEC[dir.NORTH]
+  = vec3.new(0, 0, -1)
+DIRVEC[dir.EAST]
+  = vec3.new(1, 0, 0)
+DIRVEC[dir.WEST]
+  = vec3.new(-1, 0, 0)
+DIRVEC[dir.UP]
+  = vec3.new(0, 1, 0)
+DIRVEC[dir.DOWN]
+  = vec3.new(0, -1, 0)
+
+-- | Converts the direct direction to a unit
+-- vector.
+function dir.tovec(f)
+  return vec3.dup(DIRVEC[f])
+end
+
+return dir
+
+-- vim: ft=lua shiftwidth=2 expandtab tw=44
