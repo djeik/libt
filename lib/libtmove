@@ -1,0 +1,158 @@
+local t = loadfile("libt")()
+  or error("failed to load libt")
+
+local vec3 = t.requireStrict("libvec3")
+
+local tmove = {}
+
+tmove.VERSION = { 0, 0, 1, 0 }
+
+function tmove.getPosition()
+  local h = fs.open("profile", "r")
+    or error("no profile")
+  local p = textutils.unserialize(h.readAll())
+  return vec3.new(p.xPos, p.yPos, p.zPos)
+end
+
+function tmove.getFacing()
+  local h = fs.open("profile", "r")
+    or error("no profile")
+  local p = textutils.unserialize(h.readAll())
+  return p.facing
+end
+
+function tmove.u()
+  local h = fs.open("profile", "r")
+    or error("no profile")
+  local p = textutils.unserialize(h.readAll())
+  h.close()
+  if turtle.up() then
+    p.yPos = p.yPos + 1
+    local f = fs.open("profile", "w")
+    f.write(textutils.serialize(p))
+    f.close()
+    return true
+  else
+    return false
+  end
+end
+    
+function tmove.f()
+  local h = fs.open("profile", "r")
+  local p = textutils.unserialize(h.readAll())
+  h.close()
+  if turtle.forward() then
+
+    if p.facing == 0 then
+      p.zPos = p.zPos + 1
+    elseif p.facing == 1 then
+      p.xPos = p.xPos - 1
+    elseif p.facing == 2 then
+      p.zPos = p.zPos - 1
+    else
+      p.xPos = p.xPos + 1
+    end
+
+    local f = fs.open("profile", "w")
+    f.write(textutils.serialize(p))
+    f.close()
+    return true
+
+  else
+    return false
+  end
+end
+
+function tmove.b()
+  local h = fs.open("profile", "r")
+  local p = textutils.unserialize(h.readAll())
+  h.close()
+  if turtle.back() then
+
+    if p.facing == 0 then
+      p.zPos = p.zPos - 1
+    elseif p.facing == 1 then
+      p.xPos = p.xPos + 1
+    elseif p.facing == 2 then
+      p.zPos = p.zPos + 1
+    else
+      p.xPos = p.xPos - 1
+    end
+
+    local f = fs.open("profile", "w")
+    f.write(textutils.serialize(p))
+    f.close()
+    return true
+
+  else
+    return false
+  end
+end
+
+function tmove.d()
+  local h = fs.open("profile", "r")
+  local p = textutils.unserialize(h.readAll())
+  h.close()
+  if turtle.down() then
+    p.yPos = p.yPos - 1
+    local f = fs.open("profile", "w")
+    f.write(textutils.serialize(p))
+    f.close()
+    return true
+  else
+    return false
+  end
+end
+
+function tmove.l()
+  local h = fs.open("profile", "r")
+  local p = textutils.unserialize(h.readAll())
+  h.close()
+  if turtle.turnLeft() then
+    p.facing = (p.facing - 1) % 4
+    local f = fs.open("profile", "w")
+    f.write(textutils.serialize(p))
+    f.close()
+    return true
+  else
+    return false
+  end
+end
+
+function tmove.r()
+  local h = fs.open("profile", "r")
+  local p = textutils.unserialize(h.readAll())
+  h.close()
+  if turtle.turnRight() then
+    p.facing = (p.facing + 1) % 4
+    local f = fs.open("profile", "w")
+    f.write(textutils.serialize(p))
+    f.close()
+    return true
+  else
+    return false
+  end
+end
+
+function tmove.move(s)
+  for c in s:gmatch"." do
+    if c == "u" then
+      tmove.u()
+    elseif c == "d" then
+      tmove.d()
+    elseif c == "l" then
+      tmove.l()
+    elseif c == "r" then
+      tmove.r()
+    elseif c == "f" then
+      tmove.f()
+    elseif c == "b" then
+      tmove.b()
+    else
+      error("bad movement input.")
+    end
+  end
+end
+
+return tmove
+-- vim: ft=lua shiftwidth=2 expandtab colorcolumn=45
