@@ -68,8 +68,8 @@ function world.sliceOffsets(k)
 
   local coords = {}
 
-  for i=1,world.CHUNK_SIZE do
-    for j=1,world.CHUNK_SIZE do
+  for i=0,world.CHUNK_SIZE - 1 do
+    for j=0,world.CHUNK_SIZE - 1 do
       table.insert(coords, mk(i, j))
     end
   end
