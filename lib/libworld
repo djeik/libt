@@ -221,6 +221,69 @@ function world.isRoadBlock(p)
   )
 end
 
+-- | Decides whether a given point is a
+-- chunk corner.
+function world.isChunkCorner(p)
+  local chunk = world.getChunk(p)
+  local offset = p - chunk.globalCoords
+  return t.all(
+    vec3.toarray(offset),
+    t.eq(world.CHUNK_SIZE - 1)
+  )
+end
+
+-- | Applies a path to a starting point,
+-- computing an ending point where one would
+-- be if they followed the path.
+function world.applyPath(start, path)
+  local here = vec3.dup(start)
+  for p in t.from(path) do
+    here = here + dir.tovec(p)
+  end
+  return here
+end
+
+-- | Applies a direction to a point,
+-- computing the point obtained by following
+-- the direction.
+function world.applyDirection(p, direction)
+  return p + dir.tovec(direction)
+end
+
+-- | Computes a path (sequence of
+-- directions) to move in to go from a road
+-- edge of a chunk to the chunk corner.
+function world.pathfindToCorner(p)
+  if not world.isRoadBlock(p) then
+    error("corner pathfind start is not a road")
+  end
+
+  local chunk = world.getChunk(p)
+  local offset = p - chunk.globalCoords
+  local cornerOffset = vec3.new(
+    world.CHUNK_SIZE - 1,
+    world.CHUNK_SIZE - 1,
+    world.CHUNK_SIZE - 1
+  )
+
+  local path = {}
+
+  while offset.x < cornerOffset.x do
+    table.insert(path, dir.EAST)
+    offset = world.applyDirection(offset, dir.EAST)
+  end
+  while offset.y < cornerOffset.y do
+    table.insert(path, dir.UP)
+    offset = world.applyDirection(offset, dir.UP)
+  end
+  while offset.z < cornerOffset.z do
+    table.insert(path, dir.SOUTH)
+    offset = world.applyDirection(offset, dir.SOUTH)
+  end
+
+  return path
+end
+
 -- | Computes a path between two points.
 -- This path is guaranteed to traverse only
 -- road-blocks of chunks. The two given
