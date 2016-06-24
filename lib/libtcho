@@ -8,7 +8,7 @@ local tcho = {}
 
 tcho.VERSION = {0, 0, 1, 0}
 
-function tcho.handle(msg)
+function tcho.execute(msg)
   local f = loadstring(msg.code)
   return f(unpack(msg.params))
 end
