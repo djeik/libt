@@ -137,6 +137,48 @@ function dir.invert(f)
   end
 end
 
+-- | Computes the Vec3 of the block above
+-- the provided position.
+function dir.getUp(v)
+  local nv = dir.tovec(dir.UP)
+  return v + nv
+end
+
+-- | Computes the Vec3 of the block below
+-- the provided position.
+function dir.getDown(v)
+  local nv = dir.tovec(dir.DOWN)
+  return v + nv
+end
+
+-- | Computes the Vec3 of the block left of
+-- the provided position given the facing.
+function dir.getLeft(v, f)
+  local nv = dir.tovec((f - 1) % 4)
+  return v + nv
+end
+
+-- | Computes the Vec3 of the block right of
+-- the provided position given the facing.
+function dir.getRight(v, f)
+  local nv = dir.tovec((f + 1) % 4)
+  return v + nv
+end
+
+-- | Computes the Vec3 of the block in front
+-- of the provided position given the facing.
+function dir.getForward(v, f)
+  local nv = dir.tovec(f)
+  return v + nv
+end
+
+-- | Computes the Vec3 of the block behind
+-- the provided position given the facing.
+function dir.getBehind(v, f)
+  local nv = dir.tovec((f + 2) % 4)
+  return v + nv
+end
+
 local DIRVEC = {}
 DIRVEC[dir.SOUTH]
   = vec3.new(0, 0, 1)

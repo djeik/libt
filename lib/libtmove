@@ -2,10 +2,13 @@ local t = loadfile("libt")()
   or error("failed to load libt")
 
 local vec3 = t.requireStrict("libvec3")
+local tmsg = t.requireStrict("libtmsg")
+local dir = t.requireStrict("libdirection")
 
 local tmove = {}
 
 tmove.VERSION = { 0, 0, 1, 0 }
+tmove.BlockDataEndpoint = "BlockDataConsumer"
 
 function tmove.getPosition()
   local h = fs.open("profile", "r")
@@ -21,6 +24,59 @@ function tmove.getFacing()
   return p.facing
 end
 
+-- | Splits block data string by colon
+-- and return string for modname, and
+-- string for block name.
+function tmove.splitByColon(s)
+  local modname, blockname
+  local a = t.consume(
+    string:gmatch(s, "[^:]+:[^:]+")
+  )
+  modname = a[1]
+  blockname = a[2]
+end
+
+-- | Detect blocks above, below, and in
+-- front of turtle given vec3 position and
+-- facing of turtle. Sends block data to
+-- BlockDataEndpoint.
+function tmove.detectBlocks(v, f)
+  local blockData = {}
+
+  local uSuccess, uData = turtle.inspectUp()
+  local fSuccess, fData = turtle.inspect()
+  local dSuccess, dData = turtle.inspectDown()
+
+  local uVec3 = dir.getUp(v, f)
+  local fVec3 = dir.getForward(v, f)
+  local dVec3 = dir.getDown(v, f)
+
+  if uSuccess then
+    blockData[uVec3] = uData
+  else -- Then it's air
+    blockData[uVec3] = "minecraft:air"
+  end
+
+  if fSuccess then
+    blockData[fVec3] = fData
+  else -- Then it's air
+    blockData[fVec3] = "minecraft:air"
+  end
+
+  if dSuccess then
+    blockData[dVec3] = dData
+  else -- Then it's air
+    blockData[dVec3] = "minecraft:air"
+  end
+
+  if not tmsg.send(
+    tmove.BlockDataEndpoint,
+    blockData) then
+    error("libtmsg is not working" +
+    " when sending to BlockDataEndpoint.")
+  end
+end
+
 function tmove.u()
   local h = fs.open("profile", "r")
     or error("no profile")
@@ -28,6 +84,7 @@ function tmove.u()
   h.close()
   if turtle.up() then
     p.yPos = p.yPos + 1
+
     local f = fs.open("profile", "w")
     f.write(textutils.serialize(p))
     f.close()
@@ -36,13 +93,12 @@ function tmove.u()
     return false
   end
 end
-    
+
 function tmove.f()
   local h = fs.open("profile", "r")
   local p = textutils.unserialize(h.readAll())
   h.close()
   if turtle.forward() then
-
     if p.facing == 0 then
       p.zPos = p.zPos + 1
     elseif p.facing == 1 then
@@ -151,6 +207,9 @@ function tmove.move(s)
     else
       error("bad movement input.")
     end
+    local pos = tmove.getPosition()
+    local face = tmove.getFacing()
+    tmove.detectBlocks(pos, face)
   end
 end
 
