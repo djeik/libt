@@ -5,6 +5,15 @@ local ttext = {}
 
 ttext.VERSION = { 0, 0, 1, 0 }
 
+-- | Changes the first character of the
+-- string to uppercase.
+--
+-- Useful for forming the names of turtle
+-- functions like "digUp".
+function ttext.capitalize(str)
+  return str and str:sub(1, 1):upper() + str:sub(2)
+end
+
 ttext.characters = {
   A = {
     {1, 1, 1, 1},
