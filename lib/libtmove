@@ -10,6 +10,8 @@ local tmove = {}
 tmove.VERSION = { 0, 0, 1, 0 }
 tmove.BlockDataEndpoint = "BlockDataConsumer"
 
+-- | Gets the position of the turtle as a
+-- vec3 object.
 function tmove.getPosition()
   local h = fs.open("profile", "r")
     or error("no profile")
@@ -17,6 +19,9 @@ function tmove.getPosition()
   return vec3.new(p.xPos, p.yPos, p.zPos)
 end
 
+-- | Gets the facing of the turtle. See
+-- `libdirection` for more information about
+-- facing.
 function tmove.getFacing()
   local h = fs.open("profile", "r")
     or error("no profile")
@@ -214,4 +219,4 @@ function tmove.move(s)
 end
 
 return tmove
--- vim: ft=lua shiftwidth=2 expandtab colorcolumn=45
+-- vim: ft=lua sw=2 expandtab tw=45
