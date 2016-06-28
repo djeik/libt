@@ -1,0 +1,99 @@
+local t = loadfile("libt")()
+  or error("failed to load libt")
+
+local dir = t.requireStrict("libdirection")
+local text = t.requireStrict("libttext")
+
+local tturtle = {}
+
+local DIRSTRS = {}
+DIRSTRS[dir.UP] = "up"
+DIRSTRS[dir.DOWN] = "down"
+DIRSTRS[dir.FORWARD] = ""
+DIRSTRS[dir.LEFT] = "left"
+DIRSTRS[dir.RIGHT] = "right"
+DIRSTRS[dir.BACK] = "back"
+
+-- | Converts a relative direction to a
+-- string that can be used to form the name
+-- of a turtle function. The computed string
+-- is all lowercase. The pseudo-direction
+-- `AROUND` does not have an associated
+-- string.
+-- If the given value does not have an
+-- associated string, then `error` is called.
+local function dir2str(d)
+  return DIRSTRS[d]
+    or error("the direction " .. tostring(d) ..
+      " is invalid")
+end
+
+-- | Moves the turtle in the direction given
+-- by the relative direction `d`.
+-- If the relative direction `d` does not
+-- have an associated movement function, then
+-- `error` is called.
+function tturtle.move(d)
+  local s = dir2str(d)
+  if s == "" then
+    s = "forward"
+  end
+  local f = turtle[s]
+    or error("no such movement function: " .. s)
+  return f()
+end
+
+local function turnAround()
+  turtle.turnRight()
+  turtle.turnRight()
+end
+
+local function runTF(base, dir)
+  local s = base + text.capitalize(dir2str(d))
+  local f = turtle[s]
+    or error("no such turtle function " .. s)
+  return f()
+end
+
+-- | Turns the turtle in the given relative
+-- direction. The pseudo-direction AROUND is
+-- supported.
+-- If a direction that cannot be turned in is
+-- given, then `error` is called.
+function tturtle.turn(d)
+  -- handle the special case of the
+  -- pseudo-direction AROUND
+  if d == dir.AROUND then
+    return turnAround()
+  end
+  return runTF("turn", d)
+end
+
+local function mkSimpleAction(name)
+  tturtle[name] = function(d)
+    return runTF(name, d)
+  end
+end
+
+mkSimpleAction("dig")
+mkSimpleAction("inspect")
+mkSimpleAction("place")
+mkSimpleAction("compare")
+mkSimpleAction("drop")
+mkSimpleAction("suck")
+mkSimpleAction("detect")
+mkSimpleAction("attack")
+
+-- Now define a metatable for tturtle that
+-- will cause failed lookups in tturtle to
+-- perform a lookup in vanilla CC turtle.
+
+local mt = {}
+function mt.__index(t, k)
+  return turtle[k]
+end
+setmetatable(tturtle, mt)
+
+return tturtle
+
+-- vim: ft=lua sw=2 expandtab tw=45
