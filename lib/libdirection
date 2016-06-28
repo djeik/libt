@@ -17,8 +17,17 @@ dir.SOUTH = 0
 dir.WEST = 1
 dir.NORTH = 2
 dir.EAST = 3
+
 dir.UP = 4
 dir.DOWN = 5
+
+dir.LEFT = 6
+dir.RIGHT = 7
+dir.FORWARD = 8
+dir.BACK = 9
+
+-- relative pseudo-direction for convenience
+dir.AROUND = 10
 
 -- | Array of all possible directions.
 dir.DIRECTIONS = {
@@ -28,6 +37,16 @@ dir.DIRECTIONS = {
   dir.EAST,
   dir.UP,
   dir.DOWN,
+}
+
+-- | Array of all relative directions.
+dir.REL_DIRECTIONS = {
+  dir.UP,
+  dir.DOWN,
+  dir.LEFT,
+  dir.RIGHT,
+  dir.FORWARD,
+  dir.BACK,
 }
 
 -- | Array of all possible facings.
