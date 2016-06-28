@@ -7,4 +7,6 @@ lib/libtmove
 lib/libtnet
 lib/libtput
 lib/libvec3
+lib/libttext
+lib/libturtle
 etsy/update
