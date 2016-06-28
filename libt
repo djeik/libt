@@ -575,8 +575,12 @@ function t.setMember(elem, set)
     or false
 end
 
--- | Convenient.
-t.show = textutils.serialize
+-- Convenient.
+-- We perform a null-check so that when
+-- running libt under Lua outside of CC, it
+-- doesn't blow up.
+t.show = textutils and textutils.serialize
+t.read = textutils and textutils.unserialize
 
 return t
 
