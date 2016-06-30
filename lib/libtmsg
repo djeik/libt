@@ -1,3 +1,6 @@
+local t = loadfile("libt")()
+  or error("failed to load libt")
+
 local tmsg = {}
 
 tmsg.VERSION = { 0, 0, 1, 0 }
@@ -14,15 +17,26 @@ local function mkUrl(id)
   "/msg/" .. id
 end
 
-function tmsg.send(id, msg)
+tmsg.CONTENT_TYPE = {
+  PLAIN_TEXT = "text/plain; charset=utf-8",
+  JSON = "application/json",
+  ANY = "*/*",
+}
+
+function tmsg.send(id, msg, contentType, accept)
+  local contentType = contentType
+    or tmsg.CONTENT_TYPE.PLAIN_TEXT
+  local accept = accept
+    or tmsg.CONTENT_TYPE.ANY
+
   local headers = {}
-  headers["Content-type"] = "text/plain; charset=utf-8"
-  headers["Accept"] = "text/plain; charset=utf-8"
-  result = http.post(mkUrl(id), msg, headers)
+  headers["Content-type"] = contentType
+  headers["Accept"] = accept
+  local result = http.post(mkUrl(id), msg, headers)
   if result == nil then
-    return false
+    return nil
   end
-  return true
+  return result.readAll()
 end
 
 function tmsg.recv(id)
@@ -35,6 +49,14 @@ function tmsg.recv(id)
     return nil
   end
   return f
+end
+
+function tmsg.sendLua(id, tab)
+  return tmsg.send(id, t.show(tab))
+end
+
+function tmsg.recvLua(id)
+  return t.read(tmsg.recv(id))
 end
 
 return tmsg
