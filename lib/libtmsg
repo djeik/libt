@@ -7,14 +7,15 @@ tmsg.VERSION = { 0, 0, 1, 0 }
 
 tmsg.CONNECTION = {
     HOST = "localhost",
-    PORT = 8080
+    PORT = 8080,
+    PREFIX = "",
 }
 
 local function mkUrl(id)
   return "http://" ..
   tmsg.CONNECTION.HOST .. ":" ..
   tostring(tmsg.CONNECTION.PORT) ..
-  "/msg/" .. id
+  tmsg.CONNECTION.PREFIX .. id
 end
 
 tmsg.CONTENT_TYPE = {
