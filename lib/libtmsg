@@ -7,6 +7,9 @@ local tmsg = {}
 -- used without JSON support
 local json = t.require("libjson")
 
+tmsg.DEBUG = false
+tmsg.DEFAULT_PERIOD = 0.1
+
 tmsg.VERSION = { 0, 0, 1, 0 }
 
 tmsg.CONNECTION = {
@@ -14,6 +17,13 @@ tmsg.CONNECTION = {
     PORT = 8080,
     PREFIX = "",
 }
+
+local function debug(...)
+  local args = { ... }
+  if tmsg.DEBUG then
+    print(unpack(args))
+  end
+end
 
 local function mkUrl(id)
   return "http://" ..
@@ -44,16 +54,55 @@ function tmsg.send(id, msg, contentType, accept)
   return result.readAll()
 end
 
-function tmsg.recv(id)
-  local result = http.get(mkUrl(id), { Accept = "*/*" })
+function tmsg.sendBlockData(tab)
+  local msg = textutils.serialise(tab)
+  local headers = {}
+  local url = "http://" ..
+    tmsg.CONNECTION.HOST .. ":" ..
+    tostring(tmsg.CONNECTION.PORT) ..
+    "/blockdata"
+  headers["Content-type"] = "text/plain; charset=utf-8"
+  headers["Accept"] = "text/plain; charset=utf-8"
+  result = http.post(url, msg, headers)
   if result == nil then
+    debug("POST (FAILED) - ", url, " - ", msg)
+    return false
+  end
+  debug("POST (SUCCESS) - ", url, " - ", msg)
+  return true
+end
+
+function tmsg.recv(id)
+  local url = mkUrl(id)
+  local result = http.get(url, { Accept = "*/*" })
+  if result == nil then
+    debug("GET (FAILED) - ", url)
     return nil
   end
   local f = result.readAll()
   if f == "" then
+    debug("GET (EMPTY) - ", url)
     return nil
   end
+  debug("GET (SUCCESS) - ", url)
   return f
+end
+
+function tmsg.recvBlock(id, timeout, period)
+  local period = period or tmsg.DEFAULT_PERIOD
+  local time = 0
+  while true do
+    local response = tmsg.recv(id)
+    if response == nil then
+      sleep(period)
+      time = time + period
+      if timeout and time >= timeout then
+        return nil
+      end
+    else
+      return response
+    end
+  end
 end
 
 function tmsg.sendLua(id, tab)

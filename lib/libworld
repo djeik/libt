@@ -286,14 +286,14 @@ end
 
 -- | Computes a path between two points.
 -- This path is guaranteed to traverse only
--- road-blocks of chunks. The two given
+-- inter-chunk highways. The two given
 -- points must be themselves road-blocks.
 function world.pathfindBetweenChunks(p1, p2)
-  if not world.isRoadBlock(p1) then
+  if not world.isChunkCorner(p1) then
     error("chunk pathfind start is not a road")
   end
 
-  if not world.isRoadBlock(p2) then
+  if not world.isChunkCorner(p2) then
     error("chunk pathfind end is not a road")
   end
 

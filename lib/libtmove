@@ -8,7 +8,6 @@ local dir = t.requireStrict("libdirection")
 local tmove = {}
 
 tmove.VERSION = { 0, 0, 1, 0 }
-tmove.BlockDataEndpoint = "BlockDataConsumer"
 
 -- | Gets the position of the turtle as a
 -- vec3 object.
@@ -44,7 +43,7 @@ end
 -- | Detect blocks above, below, and in
 -- front of turtle given vec3 position and
 -- facing of turtle. Sends block data to
--- BlockDataEndpoint.
+-- blockdata endpoint.
 function tmove.detectBlocks(v, f)
   local blockData = {}
 
@@ -74,11 +73,9 @@ function tmove.detectBlocks(v, f)
     blockData[dVec3] = "minecraft:air"
   end
 
-  if not tmsg.send(
-    tmove.BlockDataEndpoint,
-    blockData) then
+  if not tmsg.sendBlockData(blockData) then
     error("libtmsg is not working" +
-    " when sending to BlockDataEndpoint.")
+    " when sending to blockdata endpoint.")
   end
 end
 

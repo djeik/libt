@@ -1,13 +1,13 @@
 local t = loadfile("libt")()
   or error("failed to load libt")
 
-local tmsg = t.require("libtmsg")
-  or error("failed to load libtmsg")
+local tmsg = t.requireStrict("libtmsg")
 
-local tcho = t.require("libtcho")
-  or error("failed to load handlers")
+local tcho = t.requireStrict("libtcho")
+
 
 while true do
+  print("listening...")
   local flag = true
   local msg = tmsg.recv(os.getComputerID())
   if msg == nil then
@@ -15,7 +15,7 @@ while true do
   end
 
   if flag then
-    local result = tcho.handle(textutils.unserialize(msg))
+    local result = tcho.execute(textutils.unserialize(msg))
     tmsg.send("Hive", result)
   end
 

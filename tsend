@@ -1,3 +1,5 @@
+local args = { ... }
+
 local t = loadfile("libt")()
 
 if t == nil then
@@ -7,15 +9,32 @@ end
 
 local tmsg = t.require("libtmsg")
 if tmsg == nil then
-  print("libtmsg not availe")
+  print("libtmsg not available")
   return nil
 end
 
 local test = {
-    code = "print('hello from the loadstring')",
-    params = {}
+    code = "print(...)",
+    params = {"yo", "sup", "dawg"}
 }
 
-if not tmsg.send("9", test) then
-  print("failed")
-end
+local evloopCode = fs.open("ev", "r").readAll()
+local evloop = loadstring(evloopCode)
+
+parallel.waitForAll(
+  function()
+    evloop("9")
+  end,
+  function()
+    tmsg.send(
+      "9", {
+        code = evloopCode,
+        params = {os.getComputerID()}
+      }
+    )
+
+    tmsg.send("9", "13")
+  end
+)
+
+-- vim: ft=lua shiftwidth=2 expandtab tw=44
