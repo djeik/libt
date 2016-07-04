@@ -1,0 +1,23 @@
+local REPLYTO, SIDE = ...
+
+if REPLYTO == nil or SIDE == nil then
+  error("reportpower: missing arguments")
+end
+
+local t = loadfile("libt")()
+  or error("failed to load libt")
+local tmsg = t.requireStrict("libtmsg")
+
+local p = peripheral.wrap(SIDE)
+
+local stored = p.getEUStored()
+local capacity = p.getEUCapacity()
+
+tmsg.sendLua(
+  "/msg/" .. REPLYTO, {
+    stored = stored,
+    capacity = capacity,
+  }
+)
+
+-- vim: ft=lua shiftwidth=2 expandtab colorcolumn=45 tw=44

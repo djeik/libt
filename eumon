@@ -1,0 +1,76 @@
+local t = loadfile("libt")()
+  or error("failed to load libt")
+local tmsg = t.requireStrict("libtmsg")
+
+local TARGETS = { "bb1", "bb2", "bb3" }
+
+local MONITOR = peripheral.wrap("top")
+  or error("no monitor attached to top")
+MONITOR.setTextScale(3)
+
+
+-- local samples = {}
+
+local function mkReplyAddr(target)
+  return target .. "-reply"
+end
+
+local POLLPERIOD = 1 -- seconds
+
+local function loadReportPower()
+  local h = fs.open("rmi/reportpower", "r")
+  local s = h.readAll()
+  h.close()
+  return s
+end
+
+local function collectData(code)
+  local replies = t.map(
+    TARGETS,
+    function(target)
+      local replyAddr = mkReplyAddr(target)
+      tmsg.sendLua(
+        "/msg/" .. target, {
+          code = code,
+          args = {
+            replyAddr,
+            "bottom",
+          },
+        }
+      )
+      return t.read(tmsg.recvBlock("/msg/" .. replyAddr))
+    end
+  )
+  return t.fold(
+    replies,
+    function(acc, tab)
+      return {
+        stored = acc.stored + tab.stored,
+        capacity = acc.capacity + tab.capacity,
+      }
+    end,
+    { stored = 0, capacity = 0 }
+  )
+end
+
+local function show(data)
+  MONITOR.clear()
+  MONITOR.setCursorPos(1, 1)
+  MONITOR.write(
+    data.stored .. " / " .. data.capacity
+  )
+end
+
+local function main()
+  local code = loadReportPower()
+  while true do
+    local data = collectData(code)
+    print(data.stored, " / ", data.capacity)
+    show(data)
+    sleep(POLLPERIOD)
+  end
+end
+
+return main()
+
+-- vim: ft=lua shiftwidth=2 expandtab colorcolumn=45 tw=44

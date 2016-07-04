@@ -1,0 +1,40 @@
+-- | Set the redstone signal on sequentially
+-- identified machines.
+--
+-- Specifically, sets the redstone signal to
+-- STATE on SIDE for the machines listening
+-- on /msg/<PREFIX><i> where i ranges from 1
+-- to COUNT.
+--
+-- COUNT, PREFIX, and SIDE are optional.The
+-- default values are:
+-- * COUNT - 4
+-- * PREFIX - ee
+-- * SIDE - bottom
+
+local t = loadfile("libt")()
+  or error("failed to load libt")
+
+local tmsg = t.requireStrict("libtmsg")
+
+local STATE, ENGINECOUNT, PREFIX, SIDE = ...
+
+PREFIX = PREFIX or "ee"
+ENGINECOUNT = ENGINECOUNT or 4
+SIDE = SIDE or "bottom"
+
+if STATE == nil then
+  print("usage: enginectl (true|false) [COUNT] [PREFIX] [SIDE]")
+  return nil
+end
+
+for i=1,ENGINECOUNT do
+  tmsg.sendLua(
+    "/msg/" .. PREFIX .. tostring(i), {
+      code = "rs.setOutput('"..SIDE.."', "..STATE..")",
+      args = {}
+    }
+  )
+end
+
+-- vim: ft=lua shiftwidth=2 expandtab colorcolumn=45 tw=44

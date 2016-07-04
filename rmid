@@ -1,0 +1,32 @@
+local t = loadfile("libt")()
+  or error("failed to load libt")
+
+local tmsg = t.requireStrict("libtmsg")
+
+local POLLFREQ = 1 -- seconds
+
+local NAME = ...
+
+if NAME == nil then
+  error("usage: rmid NAME")
+end
+
+while true do
+  local commandStr
+    = tmsg.recvBlock("/msg/" .. NAME, 0, 1)
+
+  if commandStr ~= nil then
+    local command = t.read(commandStr)
+    if command ~= nil then
+      pcall(
+        function()
+          loadstring(command.code)(unpack(command.args))
+        end
+      )
+    else
+      print("failed to parse command: " .. commandStr)
+    end
+  end
+end
+
+-- vim: ft=lua shiftwidth=2 expandtab colorcolumn=45 tw=44
