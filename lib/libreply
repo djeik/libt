@@ -1,0 +1,87 @@
+-- | libtmsg is a fundamentally a one-way
+-- communication protocol. This library
+-- fixes that by creating a request-response
+-- layer on top of libtmsg, speicifically
+-- for use with a remote code execution
+-- system such as rmid.
+--
+-- The idea is this: you pass a string which
+-- is the program function you'd like to run
+-- on the remote machine. The function has
+-- inputs (arguments) and an output (return
+-- value). What libreply does is wrap the
+-- loading and executing of your function
+-- with another one, taking one additional
+-- parameter called "REPLYTO". The REPLYTO
+-- parameter specifies the endpoint to send
+-- the return value of the wrapped function
+-- to. So if REPLYTO is "foo", then the
+-- result of the wrapped function will be
+-- serialized and sent to "/msg/foo". It's
+-- kind of like continuation passing style!
+--
+
+local t = loadfile("libt")()
+  or error("failed to load libt")
+
+-- don't requireStrict, because libreply can
+-- be used optionally without libtmsg
+local tmsg = t.require("libtmsg")
+
+local treply = {}
+
+treply.VERSION = { 0, 0, 1, 0 }
+
+-- | Wraps the code to run in another
+-- function with an additional argument,
+-- which is the reply address. The result of
+-- the inner function is serialized and sent
+-- to the reply address.
+function treply.wrap(code)
+  return
+    "local t = loadfile('libt')()\n" ..
+    "  or error('failed to load libt')\n" ..
+    "local tmsg = t.requireStrict('libtmsg')\n" ..
+    "local ARGS = { ... }\n" ..
+    "local REPLYTO = ARGS[1]\n" ..
+    "table.remove(ARGS, 1)\n" ..
+    "local f = loadstring(" .. t.show(code) .. ")\n" ..
+    "local result = { pcall(function() return f(unpack(ARGS)) end) }\n" ..
+    "tmsg.sendLua('/msg/' .. REPLYTO, result)\n"
+end
+
+-- | Computes the REPLYTO address of this
+-- computer.
+function treply.getReplyTo()
+  return "libreply-" .. tostring(os.getComputerID())
+end
+
+-- | Send a request, automatically wrapping
+-- the code and waiting for the response.
+-- The computer identified by the route must
+-- be rmid-compatible.
+--
+-- On the remote side, the code to invoke is
+-- wrapped in pcall, so this function
+-- results exactly what the remote pcall
+-- returns. Specifically, two arguments the
+-- first of which is a boolean representing
+-- success and the second of which is either
+-- the result of the error message,
+-- depending on the value of the first.
+function treply.request(route, code, ...)
+  local replyTo = treply.getReplyTo()
+  local args = { treply.getReplyTo(), ... }
+  local wrapped = treply.wrap(code)
+  tmsg.sendLua(
+    "/msg/" .. route, {
+      code = wrapped,
+      args = args,
+    }
+  )
+  return unpack(t.read(tmsg.recvBlock("/msg/" .. replyTo)))
+end
+
+return treply
+
+-- vim: ft=lua shiftwidth=2 expandtab colorcolumn=45 tw=44

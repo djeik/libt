@@ -11,4 +11,6 @@ lib/libtput
 lib/libvec3
 lib/libttext
 lib/libturtle
+lib/libreply
+lib/librmi
 etsy/update

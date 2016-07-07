@@ -1,0 +1,75 @@
+local t = loadfile("libt")()
+  or error("failed to load libt")
+
+local tput = t.require("libtput")
+local reply = t.require("libreply")
+
+local rmi = {}
+
+rmi.VERSION = { 0, 0, 1, 0 }
+
+local CACHE = {}
+
+function rmi.loadTemplate(name, tg)
+  if CACHE[name] then
+    return CACHE[name]
+  end
+
+  local path = "/rmi/" .. name
+  local h = fs.open(path, "r")
+  if h == nil and tg then
+    if tput == nil then
+      error("tput not loaded")
+    end
+    if not tput.get(path) then
+      error("failed to fetch template from tput server")
+    end
+    h = fs.open(path, "r")
+    if h == nil then
+      error("somehow, the file still doesn't exist")
+    end
+  end
+  local s = h.readAll()
+  h.close()
+
+  CACHE[name] = s
+  return s
+end
+
+if reply == nil then
+  function rmi.request()
+    error('rmi.request is not available because libreply could not be loaded')
+  end
+else
+  function rmi.request(route, templateName, ...)
+    local args = { ... }
+    local code = rmi.loadTemplate(templateName)
+    return reply.request(route, code, unpack(args))
+  end
+end
+
+local function mkBindMT(route)
+  return {
+    __index = function(table, key)
+      return function(...)
+        local status, result = rmi.request(route, key, ...)
+        if status then
+          return result
+        else
+          error(result)
+        end
+      end
+    end
+  }
+end
+
+-- | Creates a proxy object for the machine
+-- associated with the given route.
+function rmi.bind(route)
+  local proxy = {}
+  setmetatable(proxy, mkBindMT(route))
+  return proxy
+end
+
+return rmi
+-- vim: ft=lua shiftwidth=2 expandtab colorcolumn=45 tw=44
