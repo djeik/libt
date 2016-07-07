@@ -11,6 +11,17 @@ if NAME == nil then
   error("usage: rmid NAME")
 end
 
+local function dumpCommand(command)
+  local h = fs.open("lastcommand", "w")
+  h.writeLine("ARGS:")
+  for i, arg in ipairs(command.args) do
+    h.writeLine(i, ": ", arg)
+  end
+  h.writeLine("CODE:")
+  h.writeLine(command.code)
+  h.close()
+end
+
 while true do
   local commandStr
     = tmsg.recvBlock("/msg/" .. NAME, 0, 1)
@@ -18,11 +29,15 @@ while true do
   if commandStr ~= nil then
     local command = t.read(commandStr)
     if command ~= nil then
-      pcall(
+      dumpCommand(command)
+      status, result = pcall(
         function()
           loadstring(command.code)(unpack(command.args))
         end
       )
+      if not status then
+        print("rmid: error: ", result)
+      end
     else
       print("failed to parse command: " .. commandStr)
     end
