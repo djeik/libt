@@ -1,0 +1,24 @@
+local TARGET, ACTION, SIDE, STATE = ...
+
+if STATE ~= nil then
+  STATE = loadstring("return " .. STATE)()
+end
+
+local t = loadfile("libt")()
+  or error("failed to load libt")
+local rmi = t.requireStrict("librmi")
+local lavaControl = rmi.bind(TARGET)
+
+local result = nil
+
+if ACTION == "get" then
+  result = lavaControl.rsctl("getOutput", SIDE)
+elseif ACTION == "set" then
+  result = lavaControl.rsctl("setOutput", SIDE, STATE)
+else
+  error("unknown action: " .. ACTION)
+end
+
+print(result)
+
+-- vim: ft=lua shiftwidth=2 expandtab colorcolumn=45 tw=44

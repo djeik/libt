@@ -1,0 +1,4 @@
+local ARGS = { ... }
+local fun = ARGS[1]
+table.remove(ARGS, 1)
+return rs[fun](unpack(ARGS))
