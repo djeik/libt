@@ -1,0 +1,11 @@
+local TARGET, SIDE = ...
+
+local t = loadfile("libt")()
+  or error("failed to load libt")
+local rmi = t.requireStrict("librmi")
+local tankMonitor = rmi.bind(TARGET)
+
+local result = tankMonitor.tankstatus(SIDE)
+print(result.amount, " / ", result.capacity)
+
+-- vim: ft=lua shiftwidth=2 expandtab colorcolumn=45
