@@ -1,0 +1,14 @@
+local SIDE = ...
+local p = peripheral.wrap(SIDE)
+
+local info = p.getTankInfo()
+local tank = info[1]
+
+if tank == nil then return nil end
+
+return {
+  amount = tank.contents.amount,
+  capacity = tank.capacity,
+}
+
+-- vim: ft=lua shiftwidth=2 expandtab colorcolumn=45 tw=44
