@@ -47,10 +47,13 @@ function tmsg.send(id, msg, contentType, accept)
   local headers = {}
   headers["Content-type"] = contentType
   headers["Accept"] = accept
-  local result = http.post(mkUrl(id), msg, headers)
+  local url = mkUrl(id)
+  local result = http.post(url, msg, headers)
   if result == nil then
+    debug("POST (FAILED) - ", url, " - ")--, msg)
     return nil
   end
+  debug("POST (SUCCESS) - ", url, " - ", msg)
   return result.readAll()
 end
 
