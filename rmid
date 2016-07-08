@@ -24,7 +24,7 @@ end
 
 while true do
   local commandStr
-    = tmsg.recvBlock("/msg/" .. NAME, 0, 1)
+    = tmsg.recvBlock("/msg/" .. NAME, tmsg.CONTENT_TYPE.PLAIN_TEXT, 0, 1)
 
   if commandStr ~= nil then
     local command = t.read(commandStr)

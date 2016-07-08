@@ -75,9 +75,11 @@ function tmsg.sendBlockData(tab)
   return true
 end
 
-function tmsg.recv(id)
+function tmsg.recv(id, accept)
+  local accept = accept
+    or tmsg.CONTENT_TYPE.ANY
   local url = mkUrl(id)
-  local result = http.get(url, { Accept = "*/*" })
+  local result = http.get(url, { Accept = accept })
   if result == nil then
     debug("GET (FAILED) - ", url)
     return nil
@@ -91,9 +93,12 @@ function tmsg.recv(id)
   return f
 end
 
-function tmsg.recvBlock(id, timeout, period)
+function tmsg.recvBlock(id, accept, timeout, period)
   local period = period or tmsg.DEFAULT_PERIOD
+  local accept = accept or tmsg.CONTENT_TYPE.ANY
+
   local time = 0
+
   while true do
     local response = tmsg.recv(id)
     if response == nil then
@@ -112,8 +117,17 @@ function tmsg.sendLua(id, tab)
   return tmsg.send(id, t.show(tab))
 end
 
-function tmsg.recvLua(id)
-  return t.read(tmsg.recv(id))
+function tmsg.recvLua(...)
+  return t.read(tmsg.recv(...))
+end
+
+function tmsg.recvLuaBlock(...)
+  local result = rmsg.recvBlock(...)
+  if result == nil then
+    return nil
+  else
+    return t.read(result)
+  end
 end
 
 if json ~= nil then
@@ -132,8 +146,17 @@ if json ~= nil then
     end
   end
 
-  function tmsg.recvJSON(id)
-    return json:decode(tmsg.recv(id))
+  function tmsg.recvJSON(...)
+    return json:decode(tmsg.recv(...))
+  end
+
+  function tmsg.recvJSONBlock(...)
+    local result = tmsg.recvBlock(...)
+    if result == nil then
+      return nil
+    else
+      return json:decode(result)
+    end
   end
 end
 
