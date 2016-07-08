@@ -582,6 +582,14 @@ end
 t.show = textutils and textutils.serialize
 t.read = textutils and textutils.unserialize
 
+function t.stringStartsWith(str, start)
+  return string.sub(str, 1, string.len(start)) == start
+end
+
+function t.stringEndsWith(str, ending)
+  return ending == "" or string.sub(str, string.len(ending)) == ending
+end
+
 return t
 
 -- vim: ft=lua shiftwidth=2 expandtab colorcolumn=45 tw=44
