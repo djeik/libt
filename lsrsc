@@ -1,0 +1,50 @@
+local ARGS = { ... }
+local TARGET = "furnace-1-pipe"
+
+local MOD = nil
+local ITEM = nil
+
+local t = loadfile("libt")()
+  or error("failed to load libt")
+local rmi = t.requireStrict("librmi")
+
+for arg in t.from(ARGS) do
+  if t.stringStartsWith(arg, "mod=") then
+    MOD = string.sub(arg, 5)
+  elseif t.stringStartsWith(arg, "name=") then
+    ITEM = string.sub(arg, 6)
+  else
+    error("unknown parameter " .. arg)
+  end
+end
+
+local p = rmi.bind(TARGET)
+local resources = p.listResources("auto")
+
+local function check(item)
+  if MOD ~= nil then
+    if not string.match(string.lower(item.modName), MOD) then
+      return false
+    end
+  end
+
+  if ITEM ~= nil then
+    if not string.match(string.lower(item.itemName), ITEM) then
+      return false
+    end
+  end
+
+  return true
+end
+
+for resource in t.from(resources) do
+  if check(resource) then
+    print(
+      resource.modName, " : ",
+      resource.itemName, " -- ",
+      resource.amount
+    )
+  end
+end
+
+-- vim: ft=lua shiftwidth=2 expandtab colorcolumn=45 tw=44

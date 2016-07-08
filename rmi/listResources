@@ -1,0 +1,32 @@
+local PIPESIDE = ...
+
+local t = loadfile("libt")()
+  or error("failed to load libt")
+
+local PIPE = nil
+if PIPESIDE == "auto" then
+  PIPE = peripheral.find("LogisticsPipes:Request")
+else
+  PIPE = peripheral.wrap(PIPESIDE)
+end
+
+if PIPE == nil then
+  error("no request pipe")
+end
+
+local items = PIPE.getAvailableItems()
+
+return t.map(
+  items,
+  function(item)
+    local iid = item.getValue1()
+    local qty = item.getValue2()
+    return {
+      itemName = iid.getName(),
+      modName = iid.getModName(),
+      amount = qty,
+    }
+  end
+)
+
+-- vim: ft=lua shiftwidth=2 expandtab colorcolumn=45 tw=44
