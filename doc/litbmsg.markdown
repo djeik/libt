@@ -41,7 +41,7 @@ Sends a message to the given route. Sends never block.
 #### Arguments
 
 | Argument name | Type | Required | Description |
-| ------------- | ---- | ----------- |
+| ------------- | ---- | -------- | ----------- |
 | `id`          | `string` | Yes. | The route to send the message to. |
 | `msg`         | `msg` | Yes. | The message to send. |
 | `contentType` | `string` | No. (Default: `"text/plain;charset=utf-8"`) | The value to use for the `Content-Type` header. |
