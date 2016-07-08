@@ -3,6 +3,14 @@ libtmsg
 
 Libtmsg is an inter-computer messaging system backed by `atuin-server`.
 
+Terminology
+===========
+
+  * A _route_ is the part of the final HTTP URL that identifies the computer to
+    comunicate with. Generally, libtmsg is used for inter-computer messaging
+    with routes under the `/msg` umbrella, so routes have the form `/msg/X`
+    where _X_ specifies the queue to enqueue or dequeue messages to or from.
+
 Configuration
 =============
 
