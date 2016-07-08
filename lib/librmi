@@ -17,16 +17,20 @@ function rmi.loadTemplate(name, tg)
 
   local path = "/rmi/" .. name
   local h = fs.open(path, "r")
-  if h == nil and tg then
-    if tput == nil then
-      error("tput not loaded")
-    end
-    if not tput.get(path) then
-      error("failed to fetch template from tput server")
-    end
-    h = fs.open(path, "r")
-    if h == nil then
-      error("somehow, the file still doesn't exist")
+  if h == nil then
+    if tg then
+      if tput == nil then
+        error("tput not loaded")
+      end
+      if not tput.get(path) then
+        error("failed to fetch template from tput server")
+      end
+      h = fs.open(path, "r")
+      if h == nil then
+        error("somehow, the file still doesn't exist")
+      end
+    else
+      error("no such program template " .. name)
     end
   end
   local s = h.readAll()
