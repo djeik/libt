@@ -1,0 +1,18 @@
+local t = loadfile("libt")()
+  or error("failed to load libt")
+
+local tput = t.requireStrict("libtput")
+
+local h = fs.open("/etsy/update", "r")
+
+while true do
+  local line = h.readLine()
+  if line == nil then
+    break
+  end
+  tput.get(line)
+end
+
+t.clearModuleCache()
+
+-- vim: ft=lua shiftwidth=2 expandtab tw=44
