@@ -1,5 +1,20 @@
 local TARGET, ACTION, SIDE, STATE = ...
 
+function usage()
+  print("rsctl: control redstone remotely")
+  print("usage: rsctl <target> <action> <side> [state]")
+  print("where:")
+  print("  <target> identifies a computer")
+  print("  <action> is either 'get' or 'set'")
+  print("  <side> is a side of the device")
+  print("  [state] is 'true' or 'false'")
+end
+
+if TARGET == nil or ACTION == nil or SIDE == nil or STATE == nil then
+  usage()
+  return nil
+end
+
 if STATE ~= nil then
   STATE = loadstring("return " .. STATE)()
 end
@@ -19,6 +34,6 @@ else
   error("unknown action: " .. ACTION)
 end
 
-print(result)
+print(t.show(result))
 
 -- vim: ft=lua shiftwidth=2 expandtab colorcolumn=45 tw=44
