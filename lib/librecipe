@@ -1,0 +1,46 @@
+local t = loadfile("libt")()
+  or error("failed to load libt")
+
+local tput = t.requireStrict("libtput")
+
+local recipe = {}
+recipe.VERSION = {0, 0, 1, 0}
+
+function recipe.path(name)
+  return "recipes/" .. name
+end
+
+function recipe.getRecipe(name)
+  if not fs.exists("recipes") then
+    fs.makeDir("recipes")
+  end
+  return tput.get(recipe.path(name))
+    or error("failed to download recipe " .. name)
+end
+
+function recipe.exists(name)
+  return fs.exists(recipe.path(name))
+end
+
+function recipe.load(name, download)
+  if download == nil then
+    download = true
+  end
+
+  if not recipe.exists(name) then
+    if download then
+      recipe.getRecipe(name)
+    end
+  end
+
+  if recipe.exists(name) then
+    return loadfile(recipe.path(name))()
+      or error("recipe is invalid")
+  else
+    error("no such recipe " .. name)
+  end
+end
+
+return recipe
+
+-- vim: ft=lua shiftwidth=2 expandtab colorcolumn=45 tw=44
