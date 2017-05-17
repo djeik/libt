@@ -1,0 +1,46 @@
+local t = loadfile("libt")()
+  or error("failed to load libt")
+
+local f = {}
+f.VERSION = { 0, 0, 1, 0 }
+
+local function walkInner(root, func)
+  for path in t.from(fs.list(root)) do
+    func(root .. path)
+    if fs.isDir(root .. path) then
+      walkInner(root .. path .. "/", func)
+    end
+  end
+end
+
+-- | exclude paths from a walk that satisfy
+-- any of the given predicates
+function f.prune(preds, func)
+  return function(path)
+    if t.any(preds, function(p) return p(path) end) then
+      return nil
+    else
+      return func(path)
+    end
+  end
+end
+
+f.isDir = fs.isDir
+
+-- | A predicate for use with `prune` which
+-- excludes any paths that start with a
+-- certain string.
+function f.prefix(pref)
+  return function(path)
+    return t.stringStartsWith(path, pref)
+  end
+end
+
+function f.walk(func, root)
+  root = root or ""
+  walkInner(root, func)
+end
+
+return f
+
+-- vim: ft=lua shiftwidth=2 expandtab tw=44
