@@ -11,7 +11,7 @@ ttext.VERSION = { 0, 0, 1, 0 }
 -- Useful for forming the names of turtle
 -- functions like "digUp".
 function ttext.capitalize(str)
-  return str and str:sub(1, 1):upper() + str:sub(2)
+  return str and str:sub(1, 1):upper() .. str:sub(2)
 end
 
 ttext.characters = {
