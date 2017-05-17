@@ -1,3 +1,11 @@
+-- Sorts a chest on a given side (default is
+-- bottom) by item count in ascending order.
+-- This sort is useful for chests equipped
+-- with LP extractor modules so that slots
+-- can be freed up as quickly as possible by
+-- eliminating stacks with the smallest
+-- counts.
+
 local side = ...
 if side == nil then
   side = "bottom"
