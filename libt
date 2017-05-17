@@ -67,17 +67,17 @@ t.VERSION = { 0, 1, 0, 0 }
 -- Other libtmodules must first be indexed
 -- by their version.
 
+local libtmodules = _G.libtmodules or {}
+
 function t.clearModuleCache()
   _G["libtmodules"] = {}
+  libtmodules = _G["libtmodules"]
 end
-
 
 if forceReload then
   t.clearModuleCache()
   print("libt reloaded")
 end
-
-local libtmodules = _G.libtmodules or {}
 
 -- | Directories in which to search for
 -- libraries
