@@ -100,7 +100,7 @@ end
 
 local function mkSimpleAction(name)
   tturtle[name] = function(d)
-    return runTF(name, d)
+    return runTF(name, d or dir.FORWARD)
   end
 end
 
