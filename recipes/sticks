@@ -1,0 +1,10 @@
+return {
+    shape = {
+      [1]="minecraft:planks",
+      [4]="minecraft:planks"
+    },
+    output = {
+      name = "minecraft:sticks",
+      count = 4
+    }
+}
