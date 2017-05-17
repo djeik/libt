@@ -1,0 +1,31 @@
+local MACHINE_SIDE, CHEST_SIDE, OUTPUT_SIDE, INPUT_SLOT, OUTPUT_SLOT = ...
+
+local t = loadfile("libt")()
+local dir = t.requireStrictTg("libdirection")
+
+local machine = peripheral.wrap(MACHINE_SIDE)
+local chest = peripheral.wrap(CHEST_SIDE)
+
+function machineHasAvailableInput()
+  local stack = machine.getStackInSlot(INPUT_SLOT)
+  return not stack
+end
+
+local CHEST_DIR = dir.fromSide(CHEST_SIDE)
+local MACHINE_DIR = dir.fromSide(MACHINE_SIDE)
+
+function loop()
+  macerator.pushItem(OUTPUT_SIDE, OUTPUT_SLOT)
+  if maceratorHasAvailableInput() then
+    if turtle.suck(CHEST_DIR) then
+      turtle.drop(MACHINE_DIR)
+    end
+  end
+end
+
+while true do
+  loop()
+  sleep(1)
+end
+
+-- vim: ft=lua shiftwidth=2 expandtab colorcolumn=45 tw=44
