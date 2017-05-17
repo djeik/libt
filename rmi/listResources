@@ -23,6 +23,7 @@ return t.map(
     return {
       itemName = iid.getName(),
       modName = iid.getModName(),
+      idname = iid.getIdName(),
       amount = qty,
     }
   end,
