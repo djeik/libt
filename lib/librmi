@@ -10,6 +10,12 @@ rmi.VERSION = { 0, 0, 1, 0 }
 
 local CACHE = {}
 
+function rmi.clearScriptCache()
+  for k in pairs(CACHE) do
+    CACHE[k] = nil
+  end
+end
+
 function rmi.loadTemplate(name, tg)
   if tg == nil then
     tg = true
