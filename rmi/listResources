@@ -17,7 +17,6 @@ end
 local items = PIPE.getAvailableItems()
 
 return t.map(
-  items,
   function(item)
     local iid = item.getValue1()
     local qty = item.getValue2()
@@ -26,7 +25,8 @@ return t.map(
       modName = iid.getModName(),
       amount = qty,
     }
-  end
+  end,
+  items
 )
 
 -- vim: ft=lua shiftwidth=2 expandtab colorcolumn=45 tw=44
