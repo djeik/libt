@@ -1,0 +1,26 @@
+local ID = ...
+
+local t = loadfile("libt")()
+  or error("failed to load libt")
+
+local rmi = t.requireStrictTg("librmi")
+local computer = rmi.bind(ID)
+
+local results = {}
+for k, v in pairs(computer.updateAll()) do
+  local s = ''
+  if v then
+  s = 'ok'
+  else
+    s = 'failed'
+  end
+  table.insert(results, k .. " " .. s)
+end
+
+table.sort(results)
+
+for s in t.from(results) do
+  print(s)
+end
+
+-- vim: ft=lua shiftwidth=2 expandtab tw=44

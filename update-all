@@ -1,0 +1,8 @@
+local t = loadfile("libt")()
+  or error("failed to load libt")
+
+local tput = t.requireStrict("libtput")
+tput.get("rmi/updateAll")
+loadfile("rmi/updateAll")(true)
+
+-- vim: ft=lua shiftwidth=2 expandtab tw=44
