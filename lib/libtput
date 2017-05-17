@@ -40,6 +40,24 @@ function tput.get(file)
   return true
 end
 
+function tput.getStrict(file)
+  local result = tput.get(file)
+  if result then
+    return result
+  else
+    error(
+      "libtput: " .. file .. ": " ..
+      "file not found."
+    )
+  end
+end
+
+-- invokes loadfile after downloading the file.
+function tput.loadfile(file)
+  tput.getStrict(file)
+  return loadfile(file)
+end
+
 -- | Reads a file and uploads it to TPut.
 function tput.put(file)
   -- read the file
