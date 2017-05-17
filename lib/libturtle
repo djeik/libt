@@ -1,10 +1,13 @@
 local t = loadfile("libt")()
   or error("failed to load libt")
 
-local dir = t.requireStrict("libdirection")
-local text = t.requireStrict("libttext")
+local tput = t.requireStrict("libtput")
+local dir = t.requireStrictTg("libdirection")
+local text = t.requireStrictTg("libttext")
 
 local tturtle = {}
+
+tturtle.VERSION = { 0, 0, 1, 0 }
 
 local DIRSTRS = {}
 DIRSTRS[dir.UP] = "up"
@@ -33,14 +36,40 @@ end
 -- If the relative direction `d` does not
 -- have an associated movement function, then
 -- `error` is called.
-function tturtle.move(d)
+-- If a count is given, then the action is
+-- repeated that many times. The default is
+-- one.
+-- This function returns the number of
+-- successful moves.
+function tturtle.move(d, count)
+  count = count or 1
   local s = dir2str(d)
   if s == "" then
     s = "forward"
   end
   local f = turtle[s]
     or error("no such movement function: " .. s)
-  return f()
+  for i=1,count do
+    local r = f()
+    if not r then
+      return i - 1
+    end
+  end
+  return count
+end
+
+function tturtle.moveStrict(d, count)
+  count = count or 1
+  local moved = tturtle.move(d, count)
+  if moved ~= count then
+    error(
+      "moved " ..
+      tostring(moved) ..
+      " out of " ..
+      tostring(count)
+    )
+  end
+  return count
 end
 
 local function turnAround()
