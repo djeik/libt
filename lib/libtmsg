@@ -107,7 +107,7 @@ function tmsg.recv(id, accept)
   return f
 end
 
-function tmsg.recvBlock(id, accept, timeout, period)
+function tmsg.recvBlock(id, accept, timeout, period, strict)
   local period = period or tmsg.DEFAULT_PERIOD
   local accept = accept or tmsg.CONTENT_TYPE.ANY
 
@@ -119,7 +119,11 @@ function tmsg.recvBlock(id, accept, timeout, period)
       sleep(period)
       time = time + period
       if timeout and time >= timeout then
-        return nil
+        if strict == true then
+          error("timeout")
+        else
+          return nil
+        end
       end
     else
       return response
