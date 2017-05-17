@@ -1,0 +1,7 @@
+local ID = ...
+local t = loadfile("libt")()
+local reply = t.requireStrict("libreply")
+local count = reply.clearReplies(ID)
+print("cleared " .. count .. " replies")
+
+-- vim: ft=lua shiftwidth=2 expandtab colorcolumn=45 tw=44
