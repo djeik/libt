@@ -379,7 +379,35 @@ end
 
 function t.requireStrict(name, v1, v2)
   return t.require(name, v1, v2)
-    or error("failed to load " .. name)
+    or error(
+      "libt: failed to load module " ..
+      name
+    )
+end
+
+function t.requireStrictTg(name, prefix)
+  local module = t.require(name)
+  if module ~= nil then
+    return module
+  end
+  if name == "libtput" then
+    error(
+      "failed to load libtput " ..
+      "and it cannot be obtained from " ..
+      "the network!"
+    )
+  end
+  local tput = t.require("libtput")
+  if tput == nil then
+    error(
+      "loading module " .. name .. ": " ..
+      "failed to load libtput in order " ..
+      "download module."
+    )
+  end
+  local prefix = prefix or "lib/"
+  tput.getStrict(prefix .. name)
+  return t.requireStrict(name)
 end
 
 -- | Stick all the elements of the second
