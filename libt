@@ -573,6 +573,40 @@ function t.izip(...)
   end
 end
 
+-- | An infinite range.
+function t.count(start, step)
+  start = start or 1
+  step = step or 1
+  local i = start
+  return function()
+    local j = i
+    i = i + step
+    return j
+  end
+end
+
+function t.range(start, stop, step)
+  step = step or 1
+  local r = {}
+  for i=start,stop,step do
+    table.insert(r, i)
+  end
+  return r
+end
+
+function t.irange(start, stop, step)
+  local i = start
+  return function()
+    if i <= stop then
+      local j = i
+      i = i + step
+      return j
+    else
+      return nil
+    end
+  end
+end
+
 -- | Compute a table that is the union of
 -- all given tables.
 function t.union(...)
