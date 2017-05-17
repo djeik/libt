@@ -49,6 +49,24 @@ dir.REL_DIRECTIONS = {
   dir.BACK,
 }
 
+dir.REL_TO_SIDE = {
+  [dir.UP] = "top",
+  [dir.DOWN] = "bottom",
+  [dir.LEFT] = "left",
+  [dir.RIGHT] = "right",
+  [dir.FORWARD] = "front",
+  [dir.BACK] = "back",
+}
+
+dir.SIDE_TO_REL = {
+  top = dir.UP,
+  bottom = dir.DOWN,
+  left = dir.LEFT,
+  right = dir.RIGHT,
+  front = dir.FORWARD,
+  back = dir.BACK,
+}
+
 -- | Array of all possible facings.
 dir.FACINGS = {
   dir.SOUTH,
@@ -107,6 +125,10 @@ end
 -- vertical direction.
 function dir.isVertical(d)
   return t.any({dir.UP, dir.DOWN}, t.eq(d))
+end
+
+function dir.isRelative(d)
+  return t.any(dir.REL_DIRECTIONS, t.eq(d))
 end
 
 -- | Checks whether a given number is a
@@ -216,6 +238,14 @@ DIRVEC[dir.DOWN]
 -- vector.
 function dir.tovec(f)
   return vec3.dup(DIRVEC[f])
+end
+
+function dir.toSide(d)
+  return dir.REL_TO_SIDE[d]
+end
+
+function dir.fromSide(s)
+  return dir.SIDE_TO_REL[s:lower()]
 end
 
 return dir
