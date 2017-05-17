@@ -1,0 +1,4 @@
+local p = peripheral.find("net_minecraft_src_buildcraft_factory_tiletank")
+return p.getTankInfo()[1]
+
+-- vim: ft=lua shiftwidth=2 expandtab colorcolumn=45 tw=44

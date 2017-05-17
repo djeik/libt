@@ -1,0 +1,21 @@
+-- loops over adjacent inventories and
+-- counts the taken vs total slots
+
+local t = loadfile("libt")()
+  or error("failed to load libt")
+
+local chest = t.requireStrictTg("libchest")
+
+local r = {
+  size = 0,
+  taken = 0,
+}
+
+for p in t.from(chest.findInventories()) do
+  r.size = r.size + p.getInventorySize()
+  r.taken = r.taken + #p.getAllStacks()
+end
+
+return r
+
+-- vim: ft=lua shiftwidth=2 expandtab colorcolumn=45 tw=44

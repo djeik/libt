@@ -1,0 +1,10 @@
+local type = ...
+type = type or "batbox"
+local p = peripheral.find(type)
+return {
+  capacity = p.getEUCapacity(),
+  stored = p.getEUStored(),
+  outputPerTick = p.getEUOutputPerTick(),
+  sourceTier = p.getEUSourceTier(),
+  sinkTier = p.getEUSinkTier(),
+}

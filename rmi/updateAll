@@ -1,0 +1,76 @@
+local INTERACTIVE = ...
+
+local t = loadfile("libt")()
+  or error("failed to load libt")
+
+local tput = t.requireStrict("libtput")
+
+local f = {}
+f.VERSION = { 0, 0, 1, 0 }
+
+local function walkInner(root, func)
+  for path in t.from(fs.list(root)) do
+    if fs.isDir(root .. path) then
+      walkInner(root .. path .. "/", func)
+    end
+    func(root .. path)
+  end
+end
+
+-- | exclude paths from a walk that satisfy
+-- any of the given predicates
+function f.prune(preds, func)
+  return function(path)
+    if t.any(preds, function(p) return p(path) end) then
+      return nil
+    else
+      return func(path)
+    end
+  end
+end
+
+f.isDir = fs.isDir
+
+-- | A predicate for use with `prune` which
+-- excludes any paths that start with a
+-- certain string.
+function f.prefix(pref)
+  return function(path)
+    return t.stringStartsWith(path, pref)
+  end
+end
+
+function f.walk(func, root)
+  root = root or ""
+  walkInner(root, func)
+end
+
+local results = {}
+local main = nil
+if INTERACTIVE then
+  main = function(path)
+    write("updating " .. path .. "... ")
+    if tput.get(path) then
+      print("ok")
+    else
+      print("failed")
+    end
+  end
+else
+  main = function(path)
+    results[path] = tput.get(path)
+  end
+end
+
+f.walk(
+  f.prune(
+    { f.prefix("rom"), f.isDir },
+    main
+  )
+)
+
+t.clearModuleCache()
+
+return results
+
+-- vim: ft=lua shiftwidth=2 expandtab tw=44

@@ -1,0 +1,38 @@
+AMOUNTS = ...
+
+--- AMOUNTS is table where keys are
+-- fully qualified item names and
+-- values are amounts.
+
+local t = loadfile("libt")()
+  or error("failed to load libt")
+
+local lp = t.requireStrict("liblp")
+
+local PIPE = lp.findRequestPipe()
+
+local items = PIPE.getAvailableItems()
+
+local function fulfilled()
+  for item, amt in pairs(AMOUNTS) do
+
+    local count = 0
+
+    for iid, amt in pairs(items) do
+      if iid.getIdName() == item then
+        count = count + amt
+      end
+    end
+    if count < AMOUNTS[item] then
+      return false
+    end
+
+  end
+  return true
+end
+
+while not fulfilled() do
+  os.sleep(3)
+end
+
+-- vim: ft=lua shiftwidth=2 expandtab colorcolumn=45 tw=44

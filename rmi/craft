@@ -1,0 +1,58 @@
+local t = loadfile("libt")()
+  or error("failed to load libt")
+
+local rmi = t.requireStrict("librmi")
+local lpNetwork = rmi.bind("lp-network-comp")
+
+local RECIPE = ...
+
+-- recipe is an array where the key is the
+-- item slot and the value is the
+-- modname:itemname to put there
+
+local chest = peripheral.wrap("bottom")
+
+local l2g = {
+  [1]=1,
+  [2]=2,
+  [3]=3,
+  [4]=5,
+  [5]=6,
+  [6]=7,
+  [7]=9,
+  [8]=10,
+  [9]=11,
+}
+
+local stacks = chest.getAllStacks()
+
+for srcslot, itemthere in pairs(stacks) do
+  for dstslot, item in pairs(RECIPE) do
+    if item == itemthere.basic().id then
+      turtle.select(l2g[dstslot])
+      turtle.suckDown(1)
+    end
+  end
+end
+
+turtle.select(16)
+turtle.craft()
+local iid = turtle.getItemDetail(16)
+turtle.dropDown()
+
+local items = lpNetwork.listResources()
+
+local expectedItems = {}
+for t in items do
+  if t.idname == iid.name then
+    expectedItems[t.idname] = t.amount + iid.count
+  end
+end
+
+for i=1,chest.getInventorySize() do
+  chest.pushItem("DOWN", i)
+end
+
+lpNetwork.pipeAwaitItems(expectedItems)
+
+-- vim: ft=lua shiftwidth=2 expandtab colorcolumn=45 tw=44

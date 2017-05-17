@@ -1,0 +1,105 @@
+local t = loadfile("libt")()
+local containers = t.requireStrict("libcontainers")
+local rmi = t.requireStrict("librmi")
+local lp = t.requireStrict("liblp")
+local rcp = t.requireStrict("librecipe")
+
+function lookup(item, items)
+  for pair, qty in pairs(items) do
+    local iid = pair.getValue1()
+    local qty = pair.getValue2()
+    if iid.getIdName() == item then
+      return true
+    end
+  end
+  return false
+end
+
+function acquire(count, name, networkItems)
+end
+
+function consume(item, networkItems)
+end
+
+function craftStrategy(
+  name,
+  networkItems
+  )
+  -- networkItems is dict from
+  -- ItemIdentifiers to quantities.
+  -- amounts is dict from fully qualified
+  -- item names to quantities.
+  -- This should return a list of
+  -- recipes to craft in series in order
+  -- to acquire the appropriate resources
+  -- to acquire the given `recipe`,
+  -- or nil if it is not possible.
+  if lookup(name, networkItems) then
+    return true
+  else
+    status, result = pcall(function()
+      return rcp.load(name)
+      end
+      )
+    if not status then
+      error("No such recipe for " .. 
+      name .. " exists.")
+    end
+  end
+  stratList = {}
+  for itemname in t.from(result.shape) do
+    newStrat = craftStrategy(
+      itemname,
+      networkItems
+    )
+
+    if newStrat == true then
+      table.insert(
+        stratList,
+        newStrat
+      )
+    else
+      for recipe in t.from(newStrat) do
+        if recipe == true then
+        else
+          -- Take resources away from state
+          for resItem in t.from(recipe.shape) do
+            networkItems = consume(
+              resItem,
+              networkItems
+            )
+          end
+          -- Add newly built resources to
+          -- state
+          networkItems = acquire(
+            recipe.output.count,
+            recipe.output.name,
+            networkItems
+          )
+        end
+        table.insert(
+          stratList,
+          recipe
+        )
+      end
+    end
+
+  end
+  -- result is a recipe for `name`
+end
+
+-- The final recipe we would like to craft.
+local NAME = ...
+
+local turtle = rmi.bind(
+  os.getComputerLabel() .. "-turtle"
+)
+
+local pipe = lp.findRequestPipe()
+
+local networkItems = pipe.getAvailableItems()
+
+-- Create a crafting strategy or nil
+return craftStrategy(name, networkItems)
+
+-- vim: ft=lua shiftwidth=2 expandtab colorcolumn=45 tw=44

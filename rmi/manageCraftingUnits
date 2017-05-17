@@ -1,0 +1,65 @@
+local COMMAND, ARGS
+
+local t = loadfile("libt")()
+  or error("failed to load libt")
+
+local planner = t.requireStrict("libplanner")
+
+local commands = {
+  add = function(state, name)
+    state.craftingUnits[name] = {
+      status = 'available',
+    }
+  end,
+
+  delete = function(state, name)
+    state.craftingUnits[name] = false
+  end,
+
+  checkStrict = function(state, name)
+    if not state.craftingUnits[name] then
+      error("No such crafting unit " .. name)
+    end
+  end,
+
+  isAvailable = function(state, name)
+    commands.checkStrict(state, name)
+    return state.craftingUnits[name].status == 'available'
+  end,
+
+  acquire = function(state, name, ownerName)
+    if not commands.isAvailable(state, name) then
+      error("crafting unit " .. name .. " is not available")
+    end
+
+    state.craftingUnits[name].status = "unavailable"
+    state.craftingUnits[name].owner = ownerName
+  end,
+
+  release = function(state, name)
+    if commands.isAvailable(state, name) then
+      error("crafting unit " .. name .. " is already available")
+    end
+
+    state.craftingUnits[name].status = 'available'
+    state.craftingUnits[name].owner = nil
+  end,
+
+  acquireNextAvailable = function(state, ownerName)
+    for name, v in pairs(state.craftingUnits) do
+      if commands.isAvailable(name) then
+        commands.acquire(name, ownerName)
+        return name
+      end
+    end
+    return nil
+  end,
+}
+
+local function main(state)
+  return commands[COMMAND](unpack(ARGS))
+end
+
+planner.withState(main)
+
+-- vim: ft=lua shiftwidth=2 expandtab colorcolumn=45 tw=44

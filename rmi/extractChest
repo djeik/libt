@@ -1,0 +1,34 @@
+-- DIR: direction to push items
+-- SIDES: array of sides (of the turtle)
+-- where there are inventories to push items
+-- from. Defaults to finding all inventories
+-- around the turtle.
+local DIR, SIDES = ...
+
+DIR = DIR
+  or error("direction to push items in is required")
+
+local t = loadfile("libt")()
+  or error("failed to load libt")
+local chest = t.requireStrictTg("libchest")
+
+-- if no sides are specified, do all of
+-- them.
+if SIDES == nil then
+  SIDES = chest.findInventories()
+else
+  SIDES = t.map(peripheral.wrap, SIDES)
+end
+
+local count = 0
+
+for p in t.from(SIDES) do
+  local size = p.getInventorySize()
+  for i=1,size do
+    count = count + p.pushItem(DIR, i)
+  end
+end
+
+return count
+
+-- vim: ft=lua shiftwidth=2 expandtab colorcolumn=45 tw=44
