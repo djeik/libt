@@ -58,6 +58,15 @@ function treply.getReplyTo(id)
   return "libreply-" .. tostring(os.getComputerID())
 end
 
+-- | Clears all replies for the given
+-- computer ID. Defaults to this computer's
+-- ID.
+function treply.clearReplies(id)
+  return tmsg.clearMessages(
+    "/msg/" .. treply.getReplyTo(id)
+  )
+end
+
 -- | Send a request, automatically wrapping
 -- the code and waiting for the response.
 -- The computer identified by the route must
