@@ -77,11 +77,13 @@ local function turnAround()
   turtle.turnRight()
 end
 
-local function runTF(base, d)
-  local s = base .. text.capitalize(dir2str(d))
-  local f = turtle[s]
-    or error("no such turtle function " .. s)
-  return f()
+local function runTF(base, d, ...)
+  local s = dir2str(d)
+    or error('invalid turtle direction ' .. tostring(d))
+  local name = base .. text.capitalize(s)
+  local f = turtle[name]
+    or error("no such turtle function " .. name)
+  return f(...)
 end
 
 -- | Turns the turtle in the given relative
@@ -99,8 +101,8 @@ function tturtle.turn(d)
 end
 
 local function mkSimpleAction(name)
-  tturtle[name] = function(d)
-    return runTF(name, d or dir.FORWARD)
+  tturtle[name] = function(d, ...)
+    return runTF(name, d or dir.FORWARD, ...)
   end
 end
 
