@@ -50,9 +50,11 @@ function treply.wrap(code)
     "tmsg.sendLua('/msg/' .. REPLYTO, result)\n"
 end
 
--- | Computes the REPLYTO address of this
--- computer.
-function treply.getReplyTo()
+-- | Computes the REPLYTO address for the
+-- given computer ID. Defaults to this
+-- computer's ID.
+function treply.getReplyTo(id)
+  id = id or os.getComputerID()
   return "libreply-" .. tostring(os.getComputerID())
 end
 
