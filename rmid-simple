@@ -1,0 +1,2 @@
+rmid = loadfile("rmid")
+rmid(os.getComputerLabel())
