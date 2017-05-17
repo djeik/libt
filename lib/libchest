@@ -1,0 +1,25 @@
+local t = loadfile("libt")()
+
+local chest = {}
+chest.VERSION = { 0, 0, 1, 0 }
+
+-- | Decide if a peripheral is an inventory.
+function chest.isInventory(p)
+  return p.getInventorySize ~= nil
+end
+
+-- | Returns a list of wrapped peripherals
+-- that are inventories.
+function chest.findInventories()
+  return t.filter(
+    chest.isInventory,
+    t.map(
+      peripheral.wrap,
+      peripheral.getNames()
+    )
+  )
+end
+
+return chest
+
+-- vim: ft=lua shiftwidth=2 expandtab colorcolumn=45 tw=44
