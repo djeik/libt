@@ -49,7 +49,7 @@ local function turnAround()
 end
 
 local function runTF(base, d)
-  local s = base + text.capitalize(dir2str(d))
+  local s = base .. text.capitalize(dir2str(d))
   local f = turtle[s]
     or error("no such turtle function " .. s)
   return f()
