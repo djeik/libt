@@ -11,11 +11,15 @@ rmi.VERSION = { 0, 0, 1, 0 }
 local CACHE = {}
 
 function rmi.loadTemplate(name, tg)
+  if tg == nil then
+    tg = true
+  end
+
   if CACHE[name] then
     return CACHE[name]
   end
 
-  local path = "/rmi/" .. name
+  local path = "rmi/" .. name
   local h = fs.open(path, "r")
   if h == nil then
     if tg then
@@ -23,7 +27,11 @@ function rmi.loadTemplate(name, tg)
         error("tput not loaded")
       end
       if not tput.get(path) then
-        error("failed to fetch template from tput server")
+        error(
+          "failed to fetch template " ..
+          path ..
+          " from tput server"
+        )
       end
       h = fs.open(path, "r")
       if h == nil then
