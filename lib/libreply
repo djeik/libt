@@ -93,6 +93,66 @@ function treply.request(route, code, ...)
   return unpack(t.read(tmsg.recvBlock("/msg/" .. replyTo)))
 end
 
+-- | Advanced request function. Options is a
+-- table with the keys:
+--   * route -- where to send the request
+--   * code -- the code to execute remotely
+--   * args -- list of arguments to send
+--   * timeout -- how long to wait for a
+--                response.
+--                (Default is forever.)
+--   * period -- how long to wait between
+--               polls.
+--               (Default is
+--               tmsg.DEFAULT_PERIOD i.e.
+--               0.1s.)
+--   * replyTo -- computer ID to send the
+--                reply (default is this
+--                computer)
+function treply.requestEx(options)
+  local replyTo = treply.getReplyTo(options.replyTo)
+  local args = options.args
+  table.insert(args, 1, replyTo)
+  local wrapped = treply.wrap(options.code)
+
+  tmsg.sendLua(
+    "/msg/" .. options.route, {
+      code = wrapped,
+      args = args,
+    }
+  )
+
+  local result = tmsg.recvBlock(
+    "/msg/" .. replyTo,
+    nil, -- use default ACCEPT
+    options.timeout,
+    options.period,
+    options.strict
+  )
+
+  return unpack(t.read(result))
+end
+
+-- | Check if a route is reachable.
+function treply.echo(route, timeout)
+  timeout = timeout or
+    error("echo: timeout is required")
+  local status, result = pcall(
+    function()
+      return treply.requestEx({
+        route = route,
+        code = "return true",
+        args = {},
+        timeout = timeout,
+        strict = true,
+        period = 0.1,
+      })
+    end
+  )
+
+  return result == true
+end
+
 return treply
 
 -- vim: ft=lua shiftwidth=2 expandtab colorcolumn=45 tw=44
