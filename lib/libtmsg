@@ -38,6 +38,20 @@ tmsg.CONTENT_TYPE = {
   ANY = "*/*",
 }
 
+function tmsg.clearMessages(id)
+  local headers = {}
+  headers["Content-Type"] = tmsg.CONTENT_TYPE.PLAIN_TEXT
+  headers["Accept"] = tmsg.CONTENT_TYPE.ANY
+  local url = mkUrl(id) .. "/clear"
+  local result = http.post(url, "", headers)
+  if result == nil then
+    debug("CLEAR (FAILED) - ", url, " - ")
+    return nil
+  end
+  debug("CLEAR (SUCCESS) - ", url, " - ")
+  return tonumber(result.readAll())
+end
+
 function tmsg.send(id, msg, contentType, accept)
   local contentType = contentType
     or tmsg.CONTENT_TYPE.PLAIN_TEXT
