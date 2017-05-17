@@ -1,0 +1,19 @@
+-- tries to move items to the front of the
+-- inventory.
+
+for dest=1,15 do
+  local i = dest + 1
+  while turtle.getItemSpace(dest) > 0 do
+    if i > 16 then
+      break
+    end
+    local c = turtle.getItemCount(i)
+    if c > 0 then
+      turtle.select(i)
+      turtle.transferTo(dest)
+    end
+    i = i + 1
+  end
+end
+
+-- vim: ft=lua shiftwidth=2 expandtab colorcolumn=45 tw=44

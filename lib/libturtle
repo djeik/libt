@@ -117,6 +117,42 @@ mkSimpleAction("attack")
 -- will cause failed lookups in tturtle to
 -- perform a lookup in vanilla CC turtle.
 
+tturtle.compactInventory =
+  tput.loadfile("compactInventory")
+
+function tturtle.getEmptySlots()
+  return t.filter(
+    function(s)
+      return turtle.getItemCount(s) == 0
+    end,
+    t.range(1, 16)
+  )
+end
+
+-- | Selects an empty inventory slot and runs
+-- the given function. Returns to the
+-- previously selected slot (even if the
+-- given function throws an exception!)
+-- The given function is called with the new
+-- slot number and the old slot number.
+function tturtle.withFreeSlot(func)
+  local old = turtle.getSelectedSlot()
+  local empties = tturtle.getEmptySlots()
+  local new = empties[1]
+  turtle.select(new)
+  local status, result = pcall(
+    function()
+      return func(new, old)
+    end
+  )
+  turtle.select(old)
+  if status then
+    return result
+  else
+    error("withFreeSlot: " .. result)
+  end
+end
+
 local mt = {}
 function mt.__index(t, k)
   return turtle[k]
