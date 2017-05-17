@@ -109,7 +109,7 @@ end
 
 -- | Creates a new table by running a
 -- function on each element of a table.
-function t.map(array, func)
+function t.map(func, array)
   local result = {}
   for _, v in ipairs(array) do
     table.insert(result, func(v))
@@ -131,7 +131,7 @@ end
 
 -- | Creates a new table containing only the
 -- elements satisfying a predicate.
-function t.filter(array, func)
+function t.filter(func, array)
   local result = {}
   for _, v in ipairs(array) do
     if func(v) then
@@ -505,7 +505,7 @@ function t.len(ts)
 end
 
 function t.zip(...)
-  local n = t.min(t.map(arg, t.len))
+  local n = t.min(t.map(t.len, arg))
 
   local result = {}
   for i=1, n do
@@ -536,7 +536,7 @@ t.isNil = t.eq(nil)
 
 function t.izip(...)
   return function()
-    local xs = t.map(arg, call)
+    local xs = t.map(call, arg)
     if any(xs, isNil) then
       return nil
     else

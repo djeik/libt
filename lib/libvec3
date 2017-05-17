@@ -57,8 +57,8 @@ end
 function vec3.manhattan(p1, p2)
   return t.sum(
     t.map(
-      vec3.toarray(p1 - p2),
-      math.abs
+      math.abs,
+      vec3.toarray(p1 - p2)
     )
   )
 end

@@ -114,8 +114,8 @@ end
 function dir.isValid(d)
   return t.any(
     t.map(
-      {dir.isHorizontal, dir.isVertical},
-      t.apply(d)
+      t.apply(d),
+      {dir.isHorizontal, dir.isVertical}
     )
   )
 end

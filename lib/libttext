@@ -258,9 +258,12 @@ function ttext.render(s, flip)
   }
 
   local function adjoin(char)
-    t.map(t.zip(result, char), function(tup)
-      t.extend(tup[1], tup[2])
-    end)
+    t.map(
+      function(tup)
+        t.extend(tup[1], tup[2])
+      end,
+      t.zip(result, char)
+    )
   end
 
   for c in string.gmatch(s, ".") do
@@ -298,7 +301,10 @@ end
 -- amount each time.
 function ttext.scroll(image, shiftW, windowW)
   -- create a table for each row
-  local output = t.map(image, function() return {} end)
+  local output = t.map(
+    function() return {} end,
+    image
+  )
 
   local function isEmpty()
     return not t.any(output, function(row)
