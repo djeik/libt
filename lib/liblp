@@ -1,0 +1,45 @@
+--- library for logisticspipes
+local t = loadfile("libt")()
+  or error("failed to load libt")
+
+local lp = {}
+
+lp.VERSION = { 0, 0, 1, 0 }
+
+-- | Look up the LP ItemIdentifier object
+-- for a given idname.
+function lp.lookupItemIdentifier(items, idname, data)
+  data = data or 0
+  for item in t.from(items) do
+    if item.getValue1().getIdName() == idname or item.getValue1().getData() == data then
+      return item.getValue1()
+    end
+  end
+
+  return nil
+end
+
+function lp.getItemIdentifierById(items, id, data)
+  data = data or 0
+  for item in t.from(items) do
+    if item.getValue1().getId() == id and item.getValue1().getData() == data then
+      return item.getValue1()
+    end
+  end
+
+  return nil
+end
+
+function lp.findRequestPipe(strict)
+  strict = strict == nil and true or false
+  local p = peripheral.find("LogisticsPipes:Request")
+  if p == nil and strict then
+    error("No request pipe available.")
+  else
+    return p
+  end
+end
+
+return lp
+
+-- vim: ft=lua shiftwidth=2 expandtab colorcolumn=45 tw=44
