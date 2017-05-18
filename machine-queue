@@ -2,6 +2,7 @@ local MACHINE_SIDE, CHEST_SIDE, OUTPUT_SIDE, INPUT_SLOT, OUTPUT_SLOT = ...
 
 local t = loadfile("libt")()
 local dir = t.requireStrictTg("libdirection")
+local turtle = t.requireStrictTg("libturtle")
 
 local machine = peripheral.wrap(MACHINE_SIDE)
 local chest = peripheral.wrap(CHEST_SIDE)
@@ -14,9 +15,19 @@ end
 local CHEST_DIR = dir.fromSide(CHEST_SIDE)
 local MACHINE_DIR = dir.fromSide(MACHINE_SIDE)
 
-function loop()
-  macerator.pushItem(OUTPUT_SIDE, OUTPUT_SLOT)
-  if maceratorHasAvailableInput() then
+local function dumpOutput()
+  if type(OUTPUT_SLOT) == 'table' then
+    for slot in t.from(OUTPUT_SLOT) do
+      machine.pushItem(OUTPUT_SIDE, slot)
+    end
+  else
+    machine.pushItem(OUTPUT_SIDE, OUTPUT_SLOT)
+  end
+end
+
+local function loop()
+  dumpOutput()
+  if machineHasAvailableInput() then
     if turtle.suck(CHEST_DIR) then
       turtle.drop(MACHINE_DIR)
     end
