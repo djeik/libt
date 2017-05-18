@@ -1,7 +1,7 @@
 local t = loadfile("libt")()
   or error("failed to load libt")
 
-local tmsg = t.requireStrict("libtmsg")
+local tmsg = t.requireStrictTg("libtmsg")
 
 local POLLFREQ = 1 -- seconds
 

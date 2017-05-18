@@ -1,2 +1,9 @@
-rmid = loadfile("rmid")
+local t = loadfile("libt")()
+local tput = t.requireStrict("libtput")
+if not fs.exists("rmid") then
+  tput.getStrict("rmid")
+end
+local rmid = loadfile("rmid")
 rmid(os.getComputerLabel())
+
+-- vim: ft=lua shiftwidth=2 expandtab tw=44
