@@ -120,7 +120,7 @@ end
 -- | Maps a function inside an iterator.
 function t.imap(it, func)
   return function()
-    local x = {it()}
+    local x = pack(it())
     if x[1] == nil then
       return nil
     else
@@ -143,7 +143,7 @@ end
 
 -- | Drops elements from an iterator unless
 -- they satisfy a predicate.
-function t.ifilter(it, func)
+function t.ifilter(func, it)
   return function()
     local x = nil
     while x == nil do
@@ -195,7 +195,7 @@ end
 -- that result by separating by any of the
 -- characters in `sep`.
 function t.splitBy(str, sep)
-  return string.gmatch(str, "[^"..sep.."]")
+  return string.gmatch(str, "[^"..sep.."]+")
 end
 
 -- | Iterate over the tokens in a string
@@ -379,10 +379,7 @@ end
 
 function t.requireStrict(name, v1, v2)
   return t.require(name, v1, v2)
-    or error(
-      "libt: failed to load module " ..
-      name
-    )
+    or error("failed to load module " ..  name)
 end
 
 function t.requireStrictTg(name, prefix)
@@ -407,6 +404,7 @@ function t.requireStrictTg(name, prefix)
   end
   local prefix = prefix or "lib/"
   tput.getStrict(prefix .. name)
+  print('downloaded ' , name)
   return t.requireStrict(name)
 end
 
@@ -650,6 +648,33 @@ end
 
 function t.stringEndsWith(str, ending)
   return ending == "" or string.sub(str, string.len(ending)) == ending
+end
+
+function t.byOrderedKeys(tab)
+  local ks = {}
+  for k, v in pairs(tab) do
+    table.insert(ks, k)
+  end
+  local i = 1
+  return function()
+    local k = ks[i]
+    if k == nil then
+      return nil
+    else
+      i = i + 1
+      return tab[k]
+    end
+  end
+end
+
+function t.finally(func, done)
+  local status, result = pcall(func)
+  done()
+  if status then
+    return result
+  else
+    error(result)
+  end
 end
 
 return t
