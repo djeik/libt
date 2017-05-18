@@ -242,10 +242,12 @@ end
 
 function dir.toSide(d)
   return dir.REL_TO_SIDE[d]
+    or error('invalid direction ' .. tostring(d))
 end
 
 function dir.fromSide(s)
   return dir.SIDE_TO_REL[s:lower()]
+    or error('invalid side ' .. tostring(s))
 end
 
 return dir
