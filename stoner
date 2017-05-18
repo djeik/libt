@@ -1,94 +1,96 @@
 local t = loadfile("libt")()
-  or error("Failed to load libt.")
-local srcSide = "front"
-local dstSide = "bottom"
 
-local srcChest = peripheral.wrap(srcSide)
-local dstChest = peripheral.wrap(dstSide)
-local srcSize = srcChest.getInventorySize()
-local dstSize = dstChest.getInventorySize()
+local tput = t.requireStrict('libtput')
+local reply = t.requireStrictTg('libreply')
+local rmi = t.requireStrictTg('librmi')
+local lp = t.requireStrictTg('liblp')
 
-
-local slots = {
-  2, 3, 5, 6, 7, 9, 10, 11
-}
-
-local function cleanInventory()
-  for i=1,16 do
-    if turtle.getItemCount(i) > 0 then
-      turtle.select(i)
-      turtle.drop()
-    end
-  end
+local count = reply.clearReplies()
+if count > 0 then
+  print('cleared ', count, ' outstanding replies')
 end
 
-local function condenseCobblestone()
-  local q = turtle.getItemCount(1)
-  if q % 9 ~= 0 then
-    print("Trying to condense stuff not multiple of nine.")
-    return false
-  end
-  local q = math.floor(q / 9)
-  for i, slot in ipairs(slots) do
-    turtle.transferTo(slot, q)
-  end
-  return true
-end
+local turtle = rmi.bind('stoner')
+local listResources = tput.loadfile('rmi/listResources')
+local pipe = lp.findRequestPipe(true)
 
-local function isCompressible(stack)
-  return stack.qty >= 9 and (
-    stack.name == "cobblestone"
-    or
-    stack.name == "gravel"
-    or
-    (
-      stack.name == "cobblestone_compressed"
-      and
-      not stack.ore_dict.compressedGravel2x
-      and
-      not stack.ore_dict.compressedCobblestone8x
-      and
-      not stack.ore_dict.compressedDirt4x
+local function isCompressible(i)
+  return i.amount >= 9 and t.any(
+    -- ids of cobble, dirt, gravel, sand
+    {4, 3, 13, 12},
+    t.eq(i.id)
+  ) or (
+    -- common id of all compressed versions
+    -- the specific type is distinguished in
+    -- the data field
+    i.id == 1811
+    and
+    t.any(
+      -- data values for all but the most
+      -- compressed version of each type
+      {0, 1, 2, 3, 4, 5, 6, 8, 10, 12, 14},
+      t.eq(i.data)
     )
-    or
-    stack.name == "dirt"
+  ) or (
+    -- handles tiny piles of most dusts
+    i.id == 4108
+    and
+    t.any(
+      t.range(0,10),
+      t.eq(i.data)
+    )
+  ) or (
+    t.any(
+      {4117, 4119, 7429, 7431, 7434, 7437
+      ,7440, 7443, 7446, 7449, 7452, 7456},
+      t.eq(i.id)
+    )
   )
 end
 
-local function main()
-  while true do
-    srcChest.condenseItems()
-    t.sortChest(srcChest)
-    for i=1,srcSize do
-      local r, stack = pcall(function()
-        return srcChest.getStackInSlot(i)
-      end)
-      if r and stack and isCompressible(stack) then
-        local q = stack.qty - (stack.qty % 9)
-        srcChest.swapStacks(i, 1)
-        turtle.select(1)
-        turtle.suck(q)
-        if condenseCobblestone() then
-          turtle.select(16)
-          turtle.craft()
-          turtle.dropDown()
-          if dstChest ~= nil then
-            t.sortChest(dstChest)
-          end
-        else
-          cleanInventory()
-        end
-      else
-        print("Stack ", i, " is invalid.")
-      end
+local function compress(i)
+  local itemid = lp.getItemIdentifierById(
+    pipe.getAvailableItems(),
+    i.id,
+    i.data
+  )
+  local amount = math.min(63, math.floor(i.amount / 9) * 9)
+  if amount == 0 then
+    print('amount is zero; skipping')
+    return nil
+  end
+
+  print("requesting ", amount, " ", i.idname, ":", i.data)
+  pipe.makeRequest(itemid, amount)
+  local r = turtle.awaitItems(
+    {
+      [i.idname] = amount,
+    },
+    'front',
+    5
+  )
+  if r then
+    turtle.turtle('select', {1})
+    turtle.turtle('suck')
+    turtle.compress()
+    turtle.turtle('drop')
+    local count = turtle.extractChest('UP')
+    if count ~= amount / 9 then
+      error('wut')
     end
-    sleep(1)
+  else
+    print("await failed")
+    print("Skipping.")
   end
 end
 
 while true do
-  cleanInventory()
-  pcall(main)
+  local rs = listResources(pipe)
+  for r in t.ifilter(isCompressible, t.from(rs)) do
+    print('going to compress ', r.idname)
+    compress(r)
+  end
+  sleep(1)
 end
 
 -- vim: ft=lua shiftwidth=2 expandtab colorcolumn=45 tw=44
