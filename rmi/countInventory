@@ -1,0 +1,40 @@
+local CHEST_PREFIX = ...
+
+local t = loadfile("libt")()
+  or error("failed to load libt")
+
+CHEST_PREFIX = CHEST_PREFIX or 'main-storage-'
+
+local reply = t.requireStrictTg("libreply")
+local rmi = t.requireStrictTg("librmi")
+
+local function clearReplies()
+  local r = reply.clearReplies()
+  if r > 0 then
+    print("cleared ", r, " outstanding replies.")
+  end
+end
+clearReplies()
+
+local total = {
+  size = 0,
+  taken = 0,
+  chests = {},
+}
+
+for i in t.count() do
+  local id = CHEST_PREFIX .. tostring(i)
+  if reply.echo(id, 2) then
+    local chest = rmi.bind(id)
+    local r = chest.inventoryStatus()
+    table.insert(total.chests, r)
+    total.size = total.size + r.size
+    total.taken = total.taken + r.taken
+  else
+    break
+  end
+end
+
+return total
+
+-- vim: ft=lua shiftwidth=2 expandtab colorcolumn=45 tw=44
