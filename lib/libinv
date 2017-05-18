@@ -1,0 +1,42 @@
+-- library for dealing with a central
+-- inventory
+
+local inv = {}
+inv.VERSION = { 0, 0, 1, 0 }
+
+-- | Check whether any of the items in the
+-- list contains the given idname.
+-- Returns how many of them we have.
+function inv.lookup(idname, items)
+  for _, pair in ipairs(items) do
+    local iid = pair.getValue1()
+    local qty = pair.getValue2()
+    if iid.getIdName() == idname then
+      return qty, iid
+    end
+  end
+
+  return 0
+end
+
+-- | Returns:
+-- * true or false, to indicate success
+-- * the quantity of the item after
+-- consumption
+-- * the ItemIdentifier
+function inv.consume(idname, count, items)
+  local qty, iid = inv.lookup(idname, items)
+  if not qty then
+    error('there are no ' .. idname)
+  end
+  if qty >= count then
+    items[iid] = qty - count
+    return true, qty - count, iid
+  end
+
+  return false, qty, iid
+end
+
+return inv
+
+-- vim: ft=lua shiftwidth=2 expandtab colorcolumn=45 tw=44
