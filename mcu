@@ -1,0 +1,16 @@
+local ARGS = { ... }
+
+local t = loadfile("libt")()
+local reply = t.requireStrictTg('libreply')
+reply.clearReplies()
+local rmi = t.requireStrictTg('librmi')
+
+local planner = rmi.bind('planner')
+
+print(
+  textutils.serialize(
+    planner.manageCraftingUnits(unpack(ARGS))
+  )
+)
+
+-- vim: ft=lua shiftwidth=2 expandtab colorcolumn=45 tw=44

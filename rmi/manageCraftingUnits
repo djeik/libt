@@ -1,65 +1,110 @@
-local COMMAND, ARGS
+local ARGS = {...}
+local COMMAND = table.remove(ARGS, 1)
 
 local t = loadfile("libt")()
   or error("failed to load libt")
+local reply = t.requireStrictTg('libreply')
+reply.clearReplies()
+local rmi = t.requireStrictTg('librmi')
 
-local planner = t.requireStrict("libplanner")
+local planner = t.requireStrictTg("libplanner")
 
-local commands = {
-  add = function(state, name)
-    state.craftingUnits[name] = {
-      status = 'available',
-    }
-  end,
+local commands = {}
 
-  delete = function(state, name)
-    state.craftingUnits[name] = false
-  end,
+function commands.add(state, name)
+  if commands.get(state, name) then
+    error('crafting unit ' .. name .. ' is already registered')
+  end
 
-  checkStrict = function(state, name)
-    if not state.craftingUnits[name] then
-      error("No such crafting unit " .. name)
-    end
-  end,
+  state.craftingUnits[name] = {
+    status = 'available',
+  }
 
-  isAvailable = function(state, name)
-    commands.checkStrict(state, name)
-    return state.craftingUnits[name].status == 'available'
-  end,
-
-  acquire = function(state, name, ownerName)
-    if not commands.isAvailable(state, name) then
-      error("crafting unit " .. name .. " is not available")
-    end
-
-    state.craftingUnits[name].status = "unavailable"
-    state.craftingUnits[name].owner = ownerName
-  end,
-
-  release = function(state, name)
-    if commands.isAvailable(state, name) then
-      error("crafting unit " .. name .. " is already available")
-    end
-
-    state.craftingUnits[name].status = 'available'
-    state.craftingUnits[name].owner = nil
-  end,
-
-  acquireNextAvailable = function(state, ownerName)
-    for name, v in pairs(state.craftingUnits) do
-      if commands.isAvailable(name) then
-        commands.acquire(name, ownerName)
-        return name
-      end
-    end
-    return nil
-  end,
-}
-
-local function main(state)
-  return commands[COMMAND](unpack(ARGS))
+  return true
 end
 
-planner.withState(main)
+function commands.delete(state, name)
+  local u = commands.checkStrict(state, name)
+
+  if u.status ~= 'available' then
+    error(
+      'cannot delete unit ' .. name ..
+      'in use by ' .. tostring(u.owner)
+    )
+  end
+
+  state.craftingUnits[name] = nil
+
+  return true
+end
+
+function commands.get(state, name)
+  return state.craftingUnits[name]
+end
+
+function commands.checkStrict(state, name)
+  local u = commands.get(state, name)
+  if not u then
+    error("No such crafting unit " .. name)
+  end
+  return u
+end
+
+function commands.isAvailable(state, name)
+  local u = commands.checkStrict(state, name)
+  return u.status == 'available'
+end
+
+function commands.acquire(state, name, ownerName)
+  local u = commands.checkStrict(state, name)
+
+  if u.status ~= 'available' then
+    error("crafting unit " .. name .. " is not available")
+  end
+
+  u.status = "unavailable"
+  u.owner = ownerName
+
+  return true
+end
+
+function commands.reset(state, name)
+  local u = commands.checkStrict(state, name)
+  if u.status ~= 'available' then
+    error('crafting unit ' .. name .. ' cannot be reset as it is unavailable')
+  end
+  local unit = rmi.bind(name)
+  unit.resetCraftingUnit()
+end
+
+function commands.release(state, name)
+  if commands.isAvailable(state, name) then
+    error("crafting unit " .. name .. " is already available")
+  end
+
+  state.craftingUnits[name].status = 'available'
+  state.craftingUnits[name].owner = nil
+end
+
+function commands.acquireNextAvailable(state, ownerName)
+  for name, v in pairs(state.craftingUnits) do
+    if v.status == 'available' then
+      commands.acquire(state, name, ownerName)
+      return name
+    end
+  end
+  return nil
+end
+
+local function main(state)
+  print('executing: ', COMMAND)
+  print('state: ', textutils.serialize(state))
+  print('args: ', textutils.serialize(ARGS))
+  local f = commands[COMMAND]
+    or error('no such command ' .. COMMAND)
+  return f(state, unpack(ARGS))
+end
+
+return planner.withState(main)
 
 -- vim: ft=lua shiftwidth=2 expandtab colorcolumn=45 tw=44
