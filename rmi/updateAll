@@ -64,7 +64,7 @@ end
 
 f.walk(
   f.prune(
-    { f.prefix("rom"), f.isDir },
+    { f.prefix("rom"), f.prefix("openp"), f.prefix("disk"), f.isDir },
     main
   )
 )
