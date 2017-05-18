@@ -26,7 +26,6 @@ end
 
 local function collectData(code)
   local replies = t.map(
-    TARGETS,
     function(target)
       local replyAddr = mkReplyAddr(target)
       tmsg.sendLua(
@@ -39,7 +38,8 @@ local function collectData(code)
         }
       )
       return t.read(tmsg.recvBlock("/msg/" .. replyAddr))
-    end
+    end,
+    TARGETS
   )
   return t.fold(
     replies,
