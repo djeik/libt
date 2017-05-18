@@ -1,0 +1,12 @@
+local t = loadfile("libt")()
+local reply = t.requireStrictTg('libreply')
+reply.clearReplies()
+local rmi = t.requireStrictTg('librmi')
+local dir = t.requireStrictTg('libdirection')
+
+local turtle = rmi.bind(os.getComputerLabel() .. '-turtle')
+
+turtle.dumpTurtleInventory(dir.DOWN)
+return turtle.extractChest('down', {'bottom'})
+
+-- vim: ft=lua shiftwidth=2 expandtab colorcolumn=45 tw=44

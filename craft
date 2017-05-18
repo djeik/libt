@@ -1,0 +1,52 @@
+local RECIPE_NAME = ...
+
+local t = loadfile("libt")()
+  or error("failed to load libt")
+local reply = t.requireStrictTg('libreply')
+reply.clearReplies()
+local recipe = t.requireStrictTg("librecipe")
+local rmi = t.requireStrictTg("librmi")
+
+local planner = rmi.bind("planner")
+
+local function withCraftingUnit(func)
+  local name = planner.manageCraftingUnits(
+    'acquireNextAvailable',
+    os.getComputerLabel()
+  ) or error('no available crafting units.')
+
+  print('got crafting unit ', name)
+
+  return t.finally(
+    function()
+      return func(rmi.bind(name))
+    end,
+    function()
+      planner.manageCraftingUnits('release', name)
+      print('released unit ', name)
+    end
+  )
+end
+
+local r = recipe.loadStrict(RECIPE_NAME)
+print('loaded recipe')
+local inventoryManager = rmi.bind('inventory-manager')
+local strategy, msg = inventoryManager.prepareCraft(
+  r.output.name,
+  r.output.count
+)
+if strategy == nil then
+  error(msg)
+end
+print('computed strategy of size ', #strategy)
+
+for i, r in ipairs(strategy) do
+  print('crafting step ', i, '/', #strategy)
+  withCraftingUnit(
+    function(unit)
+      unit.doCraft(r)
+    end
+  )
+end
+
+-- vim: ft=lua shiftwidth=2 expandtab colorcolumn=45 tw=44

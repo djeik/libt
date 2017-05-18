@@ -1,0 +1,19 @@
+local DIR = ...
+
+local t = loadfile('libt')()
+local turtle = t.requireStrictTg('libturtle')
+
+local count = 0
+
+for i=1,16 do
+  local c = turtle.getItemCount(i)
+  if c > 0 then
+    turtle.select(i)
+    turtle.drop(DIR)
+    count = count + c
+  end
+end
+
+return count
+
+-- vim: ft=lua shiftwidth=2 expandtab colorcolumn=45 tw=44

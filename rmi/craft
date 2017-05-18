@@ -1,14 +1,13 @@
+local RECIPE = ...
+
 local t = loadfile("libt")()
   or error("failed to load libt")
 
-local rmi = t.requireStrict("librmi")
-local lpNetwork = rmi.bind("lp-network-comp")
-
-local RECIPE = ...
-
--- recipe is an array where the key is the
--- item slot and the value is the
--- modname:itemname to put there
+local tput = t.requireStrict('libtput')
+local reply = t.requireStrictTg('libreply')
+reply.clearReplies()
+local rmi = t.requireStrictTg("librmi")
+local lpNetwork = rmi.bind("inventory-manager")
 
 local chest = peripheral.wrap("bottom")
 
@@ -26,8 +25,11 @@ local l2g = {
 
 local stacks = chest.getAllStacks()
 
+print(textutils.serialize(RECIPE.shape))
+
 for srcslot, itemthere in pairs(stacks) do
-  for dstslot, item in pairs(RECIPE) do
+  for dstslot, item in pairs(RECIPE.shape) do
+    print(item, ' == ', itemthere.basic().id)
     if item == itemthere.basic().id then
       turtle.select(l2g[dstslot])
       turtle.suckDown(1)
@@ -36,23 +38,30 @@ for srcslot, itemthere in pairs(stacks) do
 end
 
 turtle.select(16)
-turtle.craft()
+if not turtle.craft() then
+  error('craft failed!')
+end
 local iid = turtle.getItemDetail(16)
 turtle.dropDown()
 
 local items = lpNetwork.listResources()
 
 local expectedItems = {}
-for t in items do
+for t in t.from(items) do
   if t.idname == iid.name then
     expectedItems[t.idname] = t.amount + iid.count
   end
 end
 
-for i=1,chest.getInventorySize() do
-  chest.pushItem("DOWN", i)
+print(textutils.serialize(expectedItems))
+
+local extractChest = tput.loadfile('rmi/extractChest')
+extractChest('down', {'bottom'})
+
+if not lpNetwork.pipeAwaitItems(expectedItems, 7) then
+  error('timeout while waiting for outputs to arrive')
 end
 
-lpNetwork.pipeAwaitItems(expectedItems)
+return true
 
 -- vim: ft=lua shiftwidth=2 expandtab colorcolumn=45 tw=44

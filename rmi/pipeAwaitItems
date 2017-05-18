@@ -1,4 +1,4 @@
-AMOUNTS = ...
+local AMOUNTS, TIMEOUT = ...
 
 --- AMOUNTS is table where keys are
 -- fully qualified item names and
@@ -8,31 +8,43 @@ local t = loadfile("libt")()
   or error("failed to load libt")
 
 local lp = t.requireStrict("liblp")
-
 local PIPE = lp.findRequestPipe()
 
-local items = PIPE.getAvailableItems()
-
 local function fulfilled()
-  for item, amt in pairs(AMOUNTS) do
-
+  local items = PIPE.getAvailableItems()
+  for item, desired in pairs(AMOUNTS) do
     local count = 0
 
-    for iid, amt in pairs(items) do
+    for _, p in ipairs(items) do
+      local iid = p.getValue1()
+      local amt = p.getValue2()
+
       if iid.getIdName() == item then
         count = count + amt
       end
     end
-    if count < AMOUNTS[item] then
+
+    print('counted ', count, ' in inv')
+
+    if count < desired then
+      print('this is not enough')
       return false
     end
-
   end
+
   return true
 end
 
+local time = 0
+
 while not fulfilled() do
-  os.sleep(3)
+  os.sleep(0.2)
+  time = time + 0.2
+  if TIMEOUT ~= nil and time >= TIMEOUT then
+    return false
+  end
 end
+
+return true
 
 -- vim: ft=lua shiftwidth=2 expandtab colorcolumn=45 tw=44

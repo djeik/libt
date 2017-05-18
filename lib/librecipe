@@ -2,20 +2,27 @@ local t = loadfile("libt")()
   or error("failed to load libt")
 
 local tput = t.requireStrict("libtput")
+local containers = t.requireStrictTg("libcontainers")
+local fsutils = t.requireStrictTg("libfs")
+local inv = t.requireStrictTg("libinv")
 
 local recipe = {}
 recipe.VERSION = {0, 0, 1, 0}
 
+local RECIPE_DIR = 'recipes'
+
 function recipe.path(name)
-  return "recipes/" .. name
+  return RECIPE_DIR .. "/" .. name
 end
 
-function recipe.getRecipe(name)
+local CACHE = {}
+
+function recipe.getRecipeStrict(name)
   if not fs.exists("recipes") then
     fs.makeDir("recipes")
   end
-  return tput.get(recipe.path(name))
-    or error("failed to download recipe " .. name)
+  print('downloading recipe ', name)
+  return tput.getStrict(recipe.path(name))
 end
 
 function recipe.exists(name)
@@ -23,22 +30,277 @@ function recipe.exists(name)
 end
 
 function recipe.load(name, download)
+  local r = CACHE[name]
+
+  if r ~= nil then
+    print('got cached recipe ', name)
+    return r
+  end
+
   if download == nil then
     download = true
   end
 
   if not recipe.exists(name) then
     if download then
-      recipe.getRecipe(name)
+      recipe.getRecipeStrict(name)
     end
   end
 
   if recipe.exists(name) then
-    return loadfile(recipe.path(name))()
-      or error("recipe is invalid")
+    local r = loadfile(recipe.path(name))()
+    CACHE[name] = r
+    return r
   else
-    error("no such recipe " .. name)
+    return nil
   end
+end
+
+function recipe.list()
+  return fs.list(RECIPE_DIR)
+end
+
+-- | Downloads every recipe.
+function recipe.getAll()
+  print('downloading all recipes')
+  for name in tput.ilist(RECIPE_DIR) do
+    recipe.getRecipeStrict(name)
+  end
+end
+
+function recipe.loadAll()
+  recipe.getAll()
+  recipe.buildCache()
+  local recipes = {}
+  for _, r in pairs(CACHE) do
+    table.insert(recipes, r)
+  end
+  return recipes
+end
+
+-- | loads every recipe from disk
+function recipe.buildCache()
+  local l = recipe.list()
+  print('caching ', #l, ' recipes')
+  for name in t.from(l) do
+    recipe.loadStrict(name, false)
+  end
+end
+
+function recipe.loadStrict(name, ...)
+  return recipe.load(name, ...)
+    or error('failed to load recipe ' .. name)
+end
+
+-- | given a recipe, constructs a table
+-- sending idnames to a count of how many
+-- are needed to craft the recipe.
+function recipe.inputs(r)
+  local d = containers.defaultdict.new(
+    function()
+      return 0
+    end
+  )
+
+  for _, name in pairs(r.shape) do
+    d[name] = d[name] + 1
+  end
+
+  return d
+end
+
+local function getCheck(k)
+  return recipe.checks[k]
+    or error('unknown search condition ' .. k)
+end
+
+recipe.checks = {
+  outputIdname = function(r, idname)
+    return r.output.name == idname
+  end,
+
+  outputAtLeast = function(r, count)
+    return r.output.count >= count
+  end,
+
+  outputExactly = function(r, count)
+    return r.output.count == count
+  end,
+
+  -- | recursive check
+  any = function(r, search)
+    for k, v in pairs(search) do
+      local f = getCheck(k)
+      if f(r, v) then
+        return true
+      end
+    end
+
+    return false
+  end,
+}
+
+function recipe.match(r, options)
+  for k, v in pairs(options) do
+    local f = getCheck(k)
+    if not f(r, v) then
+      return false
+    end
+  end
+  return true
+end
+
+-- | Searches through a list of recipes.
+-- `search` is a table specifying the query.
+-- See implementation of `match` for
+-- possible keys.
+function recipe.search(recipes, search)
+  local oks = {}
+  for r in t.from(recipes) do
+    if recipe.match(r, search) then
+      table.insert(oks, r)
+    end
+  end
+  return oks
+end
+
+-- | Returns the number of times that a
+-- recipe must be crafted to produce at
+-- least `count` many of its output item.
+function recipe.times(recipe, count)
+  local c = recipe.output.count
+  return math.ceil(count / c)
+end
+
+-- | Compares two output counts to a desired
+-- count.
+-- Returns true if c1 better matches the
+-- desired count than c2.
+function recipe.cmpOutput(desired, c1, c2)
+  if c1 == desired then
+    return true
+  end
+  if c2 == desired then
+    return false
+  end
+  if c1 > desired and c2 < desired then
+    return true
+  end
+  if c1 < desired and c2 > desired then
+    return false
+  end
+  if c1 > desired and c2 > desired then
+    return c1 < c2
+  end
+  if c1 < desired and c2 < desired then
+    return c1 > c2
+  end
+end
+
+function recipe.mkCmpOutput(desired)
+  return function(c1, c2)
+    return recipe.cmpOutput(desired, c1, c2)
+  end
+end
+
+-- | computes the crafting strategy to
+-- produce `count` many (default 1) of
+-- `idname` given the available inventory
+-- `items`.
+-- `items` is a dict from LP ItemIdentifiers
+-- to quantities. (This is exactly what
+-- getAvailableItems() gives.)
+-- A crafting strategy is simply a list of
+-- recipes, which must be crafted in order.
+-- If the given idname cannot be crafted,
+-- the first return value is nil, and the
+-- second is a human-readable string
+-- explaining why.
+function recipe.craftStrategy(idname, items, count)
+  print(
+    'starting to make strategy for ', idname,
+    ' x', count,
+    ' with an inventory of size ', #items
+  )
+  count = count or 1
+  local already, iid = inv.lookup(idname, items)
+  if already >= count then
+    -- if we already have the necessary
+    -- items, then we discount the number we
+    -- need to take from the item store and
+    -- produce an empty list of recipes to
+    -- perform.
+    inv.consume(idname, count, items)
+    return {}
+  end
+
+  -- consume all the ones we have, if we
+  -- have any
+  if iid ~= nil then
+    items[iid] = 0
+  end
+  -- compute the new count of guys we need
+  count = count - already
+  if already ~= 0 then
+    print('adjusted count to ', count)
+  end
+
+  local allRecipes = recipe.loadAll()
+
+  print('loaded all ', #allRecipes, ' recipes')
+
+  -- find all recipes that produce this item
+  local rs = recipe.search(
+    allRecipes, {
+      outputIdname = idname,
+    }
+  )
+
+  if not rs then
+    return nil,
+      idname .. ' is insufficient in storage and ' ..
+      'no known recipe produces it'
+  end
+
+  -- find the best recipe
+  local cmp = recipe.mkCmpOutput(count)
+  table.sort(rs, cmp)
+  local r = rs[1] -- take the best one
+  print('best recipe produces ', r.output.count)
+
+  -- now we took the best one, but it's
+  -- possible that the best recipe produces
+  -- too few, so we might need to repeat it
+
+  local times = recipe.times(r, count)
+  print('so we will need to use it ', times, ' times')
+
+  -- these are the inputs *for a single*
+  -- recipe. We will need to multiply their
+  -- counts by the number `times` later!
+  local inputs = recipe.inputs(r)
+
+  -- prepare the crafting strategy.
+  -- `r` is going to go last in here, but
+  -- first we need to put in the strategies
+  -- for all its inputs.
+  local result = {}
+
+  -- k is the idname of the input, c is its
+  -- count
+  for k, c in pairs(inputs) do
+    local s = recipe.craftStrategy(k, items, times * c)
+    t.extend(result, s)
+  end
+
+  -- now we put `times` many copies of the
+  -- main recipe at the end.
+
+  for i=1,times do
+    table.insert(result, r)
+  end
+
+  return result
 end
 
 return recipe

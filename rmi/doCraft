@@ -1,0 +1,42 @@
+local RECIPE = ...
+
+local t = loadfile("libt")()
+local reply = t.requireStrictTg('libreply')
+reply.clearReplies()
+local rmi = t.requireStrictTg('librmi')
+local lp = t.requireStrictTg('liblp')
+local recipe = t.requireStrictTg('librecipe')
+local inv = t.requireStrictTg('libinv')
+
+local pipe = lp.findRequestPipe()
+local items = pipe.getAvailableItems()
+local turtle = rmi.bind(os.getComputerLabel() .. '-turtle')
+
+local inputs = recipe.inputs(RECIPE)
+
+print('inputs: ', textutils.serialize(inputs))
+
+-- request all the inputs
+for idname, count in pairs(inputs) do
+  local qty, iid = inv.lookup(idname, items)
+  if count > qty then
+    error(
+      'not enough ' .. idname .. ' stored; ' ..
+      'need ' .. tostring(count) .. ', have ' ..
+      tostring(qty)
+    )
+  end
+
+  local status = pipe.makeRequest(iid, count)
+  if status ~= 'DONE' then
+    msg = 'requesting ' .. idname .. ' failed with ' .. status
+    error(msg)
+  end
+end
+
+-- seven second timeout for the items to
+-- arrive.
+turtle.awaitItems(inputs, 'bottom', 7)
+turtle.craft(RECIPE)
+
+-- vim: ft=lua shiftwidth=2 expandtab colorcolumn=45 tw=44
