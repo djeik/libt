@@ -1,17 +1,11 @@
-local PIPESIDE = ...
+local PIPE = ...
 
 local t = loadfile("libt")()
   or error("failed to load libt")
 
-local PIPE = nil
-if PIPESIDE == "auto" then
-  PIPE = peripheral.find("LogisticsPipes:Request")
-else
-  PIPE = peripheral.wrap(PIPESIDE)
-end
-
 if PIPE == nil then
-  error("no request pipe")
+  local lp = t.requireStrictTg('liblp')
+  PIPE = lp.findRequestPipe(true)
 end
 
 local items = PIPE.getAvailableItems()
@@ -25,6 +19,8 @@ return t.map(
       modName = iid.getModName(),
       idname = iid.getIdName(),
       amount = qty,
+      id = iid.getId(),
+      data = iid.getData(),
     }
   end,
   items
