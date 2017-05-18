@@ -1,15 +1,31 @@
-AMOUNTS = ...
+local AMOUNTS, SIDE, TIMEOUT = ...
 
 --- AMOUNTS is table where keys are
 -- fully qualified item names and
 -- values are amounts.
 
-local chest = peripheral.wrap("bottom")
+local t = loadfile("libt")()
+local libchest = t.requireStrictTg("libchest")
+
+CHEST = nil
+
+if SIDE == ni then
+  for name in peripheral.getSides() do
+    local p = peripheral.wrap(name)
+    if libchest.isInventory(p) then
+      SIDE = name
+      CHEST = p
+    end
+  end
+else
+  CHEST = peripheral.wrap(SIDE)
+    or error('no chest on side ' .. SIDE)
+end
 
 local function fulfilled()
   for item, amt in pairs(AMOUNTS) do
 
-    local stacks = chest.getAllStacks()
+    local stacks = CHEST.getAllStacks()
     local count = 0
 
     for chestSlot, chestItem in pairs(stacks) do
@@ -25,8 +41,16 @@ local function fulfilled()
   return true
 end
 
+local time = 0
+
 while not fulfilled() do
-  os.sleep(3)
+  os.sleep(0.1)
+  time = time + 0.1
+  if TIMEOUT ~= nil and time >= TIMEOUT then
+    return false
+  end
 end
+
+return true
 
 -- vim: ft=lua shiftwidth=2 expandtab colorcolumn=45 tw=44
