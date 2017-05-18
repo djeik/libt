@@ -1,0 +1,63 @@
+local t = loadfile("libt")()
+  or error("failed to load libt")
+
+local planner = {}
+planner.VERSION = { 0, 0, 1, 0 }
+
+planner.PATH = "/.planner-state"
+
+function planner.load()
+  local h = fs.open(planner.PATH, "r")
+  if h == nil then
+    return planner.new()
+  end
+  local s = h.readAll()
+  local state = textutils.unserialize(s)
+  if state == nil then
+    print('state is corrupted; creating new')
+    return planner.new()
+  end
+  return planner.upgrade(state)
+end
+
+function planner.save(state)
+  print('saving state')
+  local h = fs.open(planner.PATH, "w")
+  h.write(textutils.serialize(state))
+  h.close()
+end
+
+function planner.upgrade(state)
+  if not state.craftingUnits then
+    state.craftingUnits = {}
+  end
+  return state
+end
+
+function planner.new()
+  return planner.upgrade({})
+end
+
+-- | Executes a function with the planner
+-- state.
+-- The state is saved back to disk only if
+-- the inner function returns without
+-- invoking error.
+function planner.withState(f)
+  local state = planner.load()
+  status, result = pcall(
+    function()
+      return f(state)
+    end
+  )
+  if status then
+    planner.save(state)
+    return result
+  else
+    error(result)
+  end
+end
+
+return planner
+
+-- vim: ft=lua shiftwidth=2 expandtab colorcolumn=45 tw=44
