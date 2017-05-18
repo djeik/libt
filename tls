@@ -1,13 +1,16 @@
+local DIR = ...
+
 local t = loadfile("libt")()
   or error("failed to load libt")
 
 local tput = t.require("libtput")
   or error("failed to load libtput")
 
-local files = tput.list()
+local files = tput.list(DIR)
 
 if files then
-  print(files)
+  local s = table.concat(files, '\n')
+  textutils.pagedPrint(s)
 else
   print("Failed to get listing.")
 end

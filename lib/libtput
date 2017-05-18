@@ -1,3 +1,5 @@
+local t = loadfile("libt")()
+
 local tput = {}
 
 tput.VERSION = { 0, 0, 1, 0 }
@@ -81,15 +83,23 @@ function tput.put(file)
   return result
 end
 
-function tput.list()
+-- | Returns an array of strings.
+-- The dir parameter defaults to the root.
+function tput.ilist(dir)
   local headers = {}
   headers["Content-type"] = "text/plain; charset=utf-8"
   headers["Accept"] = "text/plain; charset=utf-8"
 
+  local url = nil
+  if dir == nil then
+    url = mkUrl("/list")
+  else
+    url = mkUrl("/list/" .. textutils.urlEncode(dir))
+  end
+
   local result = http.get(
-    mkUrl("/list"),
-    {
-      Accept = "*/*"
+    url, {
+      Accept = "*/*",
     }
   )
 
@@ -98,7 +108,11 @@ function tput.list()
   end
 
   local s = result.readAll()
-  return s
+  return t.splitBy(s, '\n')
+end
+
+function tput.list(...)
+  return t.consume(tput.ilist(...))
 end
 
 return tput
