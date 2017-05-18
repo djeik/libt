@@ -1,0 +1,54 @@
+local SCRIPT, FOREVER, AUTO_UPDATE = ...
+
+local t = loadfile("libt")()
+
+local function usage()
+  print('mkstartup - create a startup program')
+  print('usage: mkstartup SCRIPT [FOREVER] [AUTO_UPDATE]')
+  print('where:')
+  print('* SCRIPT is a path to the script to run on startup')
+  print('* FOREVER is whether the script is run in a loop')
+  print('* AUTO_UPDATE is whether to use update-all before')
+  print('  running the script')
+end
+
+if SCRIPT == nil then
+  usage()
+  return nil
+end
+
+FOREVER = FOREVER and t.read(FOREVER) or nil
+AUTO_UPDATE = AUTO_UPDATE and t.read(AUTO_UPDATE) or nil
+
+local PREAMBLE =
+  "local t = loadfile('libt')()\n" ..
+  "local tput = t.requireStrict('libtput')\n" ..
+  "local script = tput.loadfile('"..SCRIPT.."')\n"
+
+local UPDATE =
+  "local updateAll = tput.loadfile('update-all')\n" ..
+  "updateAll()\n"
+
+local function LOOP(pre)
+  return "while true do \n" .. pre .. " end"
+end
+
+local OUTPUT = PREAMBLE
+
+if AUTO_UPDATE then
+  OUTPUT = OUTPUT .. UPDATE
+end
+
+local MAIN = 'script()'
+
+if FOREVER then
+  OUTPUT = OUTPUT .. LOOP(MAIN)
+else
+  OUTPUT = OUTPUT .. MAIN
+end
+
+h = fs.open('startup', 'w')
+h.write(OUTPUT)
+h.close()
+
+-- vim: ft=lua shiftwidth=2 expandtab tw=44
