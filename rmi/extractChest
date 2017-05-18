@@ -3,7 +3,7 @@
 -- where there are inventories to push items
 -- from. Defaults to finding all inventories
 -- around the turtle.
-local DIR, SIDES = ...
+local DIR, SIDES, SLOTS = ...
 
 DIR = DIR
   or error("direction to push items in is required")
@@ -23,8 +23,11 @@ end
 local count = 0
 
 for p in t.from(SIDES) do
-  local size = p.getInventorySize()
-  for i=1,size do
+  if SLOTS == nil then
+    SLOTS = t.range(1, p.getInventorySize())
+  end
+
+  for i in t.from(SLOTS) do
     count = count + p.pushItem(DIR, i)
   end
 end
