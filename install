@@ -1,3 +1,49 @@
+local COMMAND = ...
+
+local function create()
+  local t = loadfile("libt")()
+
+  local tput = t.requireStrict("libtput")
+  local fsutils = t.requireStrictTg("libfs")
+
+  local cp = function(f)
+    if fs.exists("disk/" .. f) then
+      fs.delete("disk/" .. f)
+    end
+    if tput.get(f) then
+      fs.copy(f, "disk/" .. f)
+      print(f, ' -> ', 'disk/', f)
+    else
+      print('GET failed: ', f)
+    end
+  end
+
+  fsutils.walk(
+    fsutils.prune(
+      { fsutils.prefix("rom"), fsutils.prefix("disk") },
+      function(path)
+        local dpath = "/disk/" .. path
+        if not fs.exists(dpath) and fs.isDir(path) then
+          fs.makeDir(dpath)
+        end
+
+        if not fs.isDir(path) then
+          cp(path)
+        end
+      end
+    )
+  )
+end
+
+if COMMAND ~= nil then
+  if COMMAND == 'create' then
+    create()
+    return nil
+  else
+    error('invalid command: ' .. COMMAND)
+  end
+end
+
 local function cp(f)
   if fs.exists(f) then
     print("Skipping "..f)
@@ -12,10 +58,38 @@ cp("/tg")
 cp("/tp")
 cp("/tls")
 
-shell.run("tg", "libt")
-shell.run("tg", "lib/libtcho")
-shell.run("tg", "lib/libtmove")
-shell.run("tg", "lib/libatuin")
-shell.run("tg", "lib/libtmsg")
-shell.run("tg", "lib/libtput")
-shell.run("tg", "lib/libvec3")
+local t = loadfile("libt")()
+  or error("failed to load libt")
+
+local tput = t.requireStrict("libtput")
+
+tput.getStrict("libt")
+tput.getStrict("lib/libtput")
+tput.getStrict("lib/libfs")
+
+local fsutils = t.requireStrict("libfs")
+fsutils.walk(
+  fsutils.prune(
+    {},
+    function(path)
+      local lpath = path:sub(6)
+      if fs.isDir(path) and not fs.exists(lpath) then
+        fs.makeDir(lpath)
+      end
+
+      if not fs.isDir(path) then
+        cp('/' .. lpath)
+      end
+    end
+  ),
+  'disk/'
+)
+
+local updateAll = tput.loadfile('update-all')
+updateAll()
+
+if COMMAND == 'back' then
+  create()
+end
+
+-- vim: ft=lua shiftwidth=2 expandtab colorcolumn=45 tw=44
