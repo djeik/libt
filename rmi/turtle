@@ -1,2 +1,3 @@
 local FUNCTION, ARGS = ...
+ARGS = ARGS or {}
 return turtle[FUNCTION](unpack(ARGS))
