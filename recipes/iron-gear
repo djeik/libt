@@ -1,0 +1,31 @@
+local function stoneGear()
+  return {
+    idname = 'BuildCraft|Core:stoneGearItem',
+    data = 0,
+  }
+end
+
+local function iron()
+  return {
+    idname = 'minecraft:iron_ingot',
+    data = 0,
+  }
+end
+
+return {
+  shape = {
+    nil, iron(), nil,
+    iron(), stoneGear(), iron(),
+    nil, iron(), nil,
+  },
+  output = {
+    item = {
+      idname = 'BuildCraft|Core:ironGearItem',
+      data = 0,
+    },
+    count = 1,
+  },
+  type = 'craft',
+}
+
+-- vim: ft=lua shiftwidth=2 expandtab colorcolumn=45 tw=44

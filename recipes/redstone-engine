@@ -1,0 +1,44 @@
+local function plank()
+  return {
+    idname = 'minecraft:planks',
+    data = nil,
+  }
+end
+
+local function glass()
+  return {
+    idname = 'minecraft:glass',
+    data = 0,
+  }
+end
+
+local function piston()
+  return {
+    idname = 'minecraft:piston',
+    data = 0,
+  }
+end
+
+local function gear()
+  return {
+    idname = 'BuildCraft|Core:woodenGearItem',
+    data = 0,
+  }
+end
+
+return {
+  shape = {
+    plank(), plank(), plank(),
+    nil, glass(), nil,
+    gear(), piston(), gear(),
+  },
+  output = {
+    item = {
+      idname = 'BuildCraft|Core:engineBlock',
+      data = 0,
+    },
+    count = 1,
+  },
+}
+
+-- vim: ft=lua shiftwidth=2 expandtab colorcolumn=45 tw=44

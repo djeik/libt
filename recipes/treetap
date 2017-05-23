@@ -1,0 +1,23 @@
+local function plank()
+  return {
+    idname = 'minecraft:planks',
+    data = nil,
+  }
+end
+
+return {
+  shape = {
+    nil, plank(), nil,
+    plank(), plank(), plank(),
+    plank(), nil, nil
+  },
+  output = {
+    item = {
+      idname = 'IC2:itemTreetap',
+      data = 0,
+    },
+    count = 1,
+  },
+}
+
+-- vim: ft=lua shiftwidth=2 expandtab colorcolumn=45 tw=44

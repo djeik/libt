@@ -1,0 +1,23 @@
+local function redstone()
+  return {
+    idname = 'minecraft:redstone',
+    data = 0,
+  }
+end
+
+return {
+  shape = {
+    redstone(), redstone(), redstone(),
+    redstone(), redstone(), redstone(),
+    redstone(), redstone(), redstone(),
+  },
+  output = {
+    item = {
+      idname = 'minecraft:redstone_block',
+      data = 0,
+    },
+    count = 1,
+  },
+}
+
+-- vim: ft=lua shiftwidth=2 expandtab colorcolumn=45 tw=44

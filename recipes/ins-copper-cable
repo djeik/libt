@@ -1,20 +1,24 @@
+local name = 'IC2:itemCable'
+local data = 1
+local rubber = 'IC2:itemRubber'
+
 return {
   shape = {
     [1] = {
-      idname = "minecraft:planks",
-      data = nil,
+      idname = name,
+      data = data,
     },
     [4] = {
-      idname = "minecraft:planks",
-      data = nil,
+      idname = rubber,
+      data = 0,
     },
   },
   output = {
     item = {
-      idname = "minecraft:stick",
+      idname = name,
       data = 0,
     },
-    count = 4,
+    count = 1,
   },
   type = 'craft',
 }

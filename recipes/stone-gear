@@ -1,0 +1,31 @@
+local function woodGear()
+  return {
+    idname = 'BuildCraft|Core:woodenGearItem',
+    data = 0,
+  }
+end
+
+local function stone()
+  return {
+    idname = 'minecraft:cobblestone',
+    data = 0,
+  }
+end
+
+return {
+  shape = {
+    nil, stone(), nil,
+    stone(), woodGear(), stone(),
+    nil, stone(), nil,
+  },
+  output = {
+    item = {
+      idname = 'BuildCraft|Core:stoneGearItem',
+      data = 0,
+    },
+    count = 1,
+  },
+  type = 'craft',
+}
+
+-- vim: ft=lua shiftwidth=2 expandtab colorcolumn=45 tw=44

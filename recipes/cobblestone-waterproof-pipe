@@ -1,0 +1,22 @@
+return {
+  shape = {
+    [1] = {
+      idname = 'BuildCraft|Transport:item.buildcraftPipe.pipeitemscobblestone',
+      data = 0,
+    },
+    [2] = {
+      idname = 'BuildCraft|Transport:pipeWaterproof',
+      data = 0,
+    },
+  },
+  output = {
+    item = {
+      idname = 'BuildCraft|Transport:item.buildcraftPipe.pipefluidscobblestone',
+      data = 0,
+    },
+    count = 1,
+  },
+  type = 'craft',
+}
+
+-- vim: ft=lua shiftwidth=2 expandtab colorcolumn=45 tw=44

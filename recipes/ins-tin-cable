@@ -1,0 +1,26 @@
+local cable = 'IC2:itemCable'
+local rubber = 'IC2:itemRubber'
+
+return {
+  shape = {
+    [1] = {
+      idname = cable,
+      data = 10,
+    },
+    [4] = {
+      idname = rubber,
+      data = 0,
+    },
+  },
+  output = {
+    item = {
+      idname = name,
+      data = 13,
+    },
+    count = 1,
+  },
+  type = 'craft',
+}
+
+-- vim: ft=lua shiftwidth=2 expandtab colorcolumn=45 tw=44
+

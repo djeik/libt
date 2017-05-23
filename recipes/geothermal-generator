@@ -1,0 +1,45 @@
+local function glass()
+  return {
+    idname = 'minecraft:glass',
+    data = 0,
+  }
+end
+
+local function cell()
+  return {
+    idname = 'IC2:itemCellEmpty',
+    data = 0
+  }
+end
+
+local function casing()
+  return {
+    idname = 'IC2:itemCasing',
+    data = 4,
+  }
+end
+
+local function generator()
+  return {
+    idname = 'IC2:blockGenerator',
+    data = 0,
+  }
+end
+
+return {
+  shape = {
+    glass(), cell(), glass(),
+    glass(), cell(), glass(),
+    casing(), generator(), casing(),
+  },
+  output = {
+    item = {
+      idname = 'IC2:blockGenerator',
+      data = 1,
+    },
+    count = 1,
+  },
+  type = 'craft',
+}
+
+-- vim: ft=lua shiftwidth=2 expandtab colorcolumn=45 tw=44

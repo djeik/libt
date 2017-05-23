@@ -1,0 +1,38 @@
+local function casing()
+  return {
+    idname = 'IC2:itemCasing',
+    data = 1,
+  }
+end
+
+local function coil()
+  return {
+    idname = 'IC2:itemRecipePart',
+    data = 0,
+  }
+end
+
+local function iron()
+  return {
+    idname = 'minecraft:iron_ingot',
+    data = 0,
+  }
+end
+
+return {
+  shape = {
+    nil, casing(), nil,
+    coil(), iron(), coil(),
+    nil, casing(), nil,
+  },
+  output = {
+    item = {
+      idname = 'IC2:itemRecipePart',
+      data = 1,
+    },
+    count = 1,
+  },
+  type = 'craft',
+}
+
+-- vim: ft=lua shiftwidth=2 expandtab colorcolumn=45 tw=44

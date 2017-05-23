@@ -1,0 +1,15 @@
+return {
+  shape = {
+    [1] = {
+      idname = 'minecraft:log',
+      data = nil,
+    },
+  },
+  output = {
+    item = {
+      idname = 'minecraft:planks',
+      data = nil,
+    },
+  },
+}
+-- vim: ft=lua shiftwidth=2 expandtab colorcolumn=45 tw=44

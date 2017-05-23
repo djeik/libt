@@ -1,0 +1,23 @@
+local function glowstone()
+  return {
+    idname = 'minecraft:glowstone_dust',
+    data = 0,
+  }
+end
+
+return {
+  shape = {
+    glowstone(), glowstone(), nil,
+    glowstone(), glowstone(), nil,
+    nil, nil, nil
+  },
+  output = {
+    item = {
+      idname = 'minecraft:glowstone',
+      data = 0,
+    },
+    count = 1,
+  },
+  type = 'craft',
+}
+-- vim: ft=lua shiftwidth=2 expandtab colorcolumn=45 tw=44

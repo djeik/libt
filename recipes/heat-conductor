@@ -1,0 +1,31 @@
+local function rubber()
+  return {
+    idname = 'IC2:itemRubber',
+    data = 0,
+  }
+end
+
+local function copperPlate()
+  return {
+    idname = 'IC2:itemPlates',
+    data = 0,
+  }
+end
+
+return {
+  shape = {
+    rubber(), copperPlate(), rubber(),
+    rubber(), copperPlate(), rubber(),
+    rubber(), copperPlate(), rubber(),
+  },
+  output = {
+    item = {
+      idname = 'IC2:itemRecipePart',
+      data = 5,
+    },
+    count = 1,
+  },
+}
+
+-- vim: ft=lua shiftwidth=2 expandtab colorcolumn=45 tw=44
+

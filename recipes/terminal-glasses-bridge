@@ -1,0 +1,44 @@
+local function redstone()
+  return {
+    idname = 'minecraft:redstone_block',
+    data = 0,
+  }
+end
+
+local function antenna()
+  return {
+    idname = 'OpenPeripheral:generic',
+    data = 0,
+  }
+end
+
+local function stone()
+  return {
+    idname = 'minecraft:stone',
+    data = 0,
+  }
+end
+
+local function pearl()
+  return {
+    idname = 'minecraft:ender_pearl',
+    data = 0,
+  }
+end
+
+return {
+  shape = {
+    stone(), antenna(), stone(),
+    stone(), pearl(), stone(),
+    stone(), redstone(), stone(),
+  },
+  output = {
+    item = {
+      idname = 'OpenPeripheral:glassesbridge',
+      data = 0,
+    },
+    count = 1,
+  },
+}
+
+-- vim: ft=lua shiftwidth=2 expandtab colorcolumn=45 tw=44

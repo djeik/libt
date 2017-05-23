@@ -1,0 +1,52 @@
+local function casing()
+  return {
+    idname = 'IC2:itemCasing',
+    data = 4,
+  }
+end
+
+local function motor()
+  return {
+    idname = 'IC2:itemRecipePart',
+    data = 1,
+  }
+end
+
+local function circuit()
+  return {
+    idname = 'IC2:itemPartCircuit',
+    data = 0,
+  }
+end
+
+local function cable()
+  return {
+    idname = 'IC2:itemCable',
+    data = 1,
+  }
+end
+
+local function battery()
+  return {
+    idname = 'IC2:itemBatREDischarged',
+    data = 0,
+  }
+end
+
+return {
+  shape = {
+    nil, cable(), casing(),
+    battery(), circuit(), motor(),
+    nil, cable(), casing(),
+  },
+  output = {
+    item = {
+      idname = 'IC2:itemRecipePart',
+      data = 3,
+    },
+    count = 1,
+  },
+  type = 'craft',
+}
+
+-- vim: ft=lua shiftwidth=2 expandtab colorcolumn=45 tw=44

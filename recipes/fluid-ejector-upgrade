@@ -1,0 +1,30 @@
+local function plate()
+  return {
+    idname = 'IC2:itemPlates',
+    data = 1,
+  }
+end
+
+local function motor()
+  return {
+    idname = 'IC2:itemRecipePart',
+    data = 1,
+  }
+end
+
+return {
+  shape = {
+    plate(), nil, plate(),
+    nil, motor(), nil,
+    plate(), nil, plate(),
+  },
+  output = {
+    item = {
+      idname = 'IC2:upgradeModule',
+      data = 4,
+    },
+    count = 1,
+  },
+}
+
+-- vim: ft=lua shiftwidth=2 expandtab colorcolumn=45 tw=44

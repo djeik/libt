@@ -1,0 +1,37 @@
+local function redstone()
+  return {
+    idname = 'minecraft:redstone',
+    data = 0,
+  }
+end
+
+local function iron()
+  return {
+    idname = 'minecraft:iron_ingot',
+    data = 0,
+  }
+end
+
+local function slime()
+  return {
+    idname = 'minecraft:slime_ball',
+    data = 0,
+  }
+end
+
+return {
+  shape = {
+    redstone(), redstone(), nil,
+    iron(), slime(), nil,
+    nil, nil, nil,
+  },
+  output = {
+    item = {
+      idname = 'OpenPeripheral:generic',
+      data = 0,
+    },
+    count = 1,
+  },
+}
+
+-- vim: ft=lua shiftwidth=2 expandtab colorcolumn=45 tw=44

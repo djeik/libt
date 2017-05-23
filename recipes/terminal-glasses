@@ -1,0 +1,59 @@
+local function iron()
+  return {
+    idname = 'minecraft:iron_ingot',
+    data = 0,
+  }
+end
+
+local function glowstone()
+  return {
+    idname = 'minecraft:glowstone',
+    data = 0,
+  }
+end
+
+local function pearl()
+  return {
+    idname = 'minecraft:ender_pearl',
+    data = 0,
+  }
+end
+
+local function redstone()
+  return {
+    idname = 'minecraft:redstone',
+    data = 0,
+  }
+end
+
+local function glass()
+  return {
+    idname = 'minecraft:glass_pane',
+    data = 0,
+  }
+end
+
+local function antenna()
+  return {
+    idname = 'OpenPeripheral:generic',
+    data = 0,
+  }
+end
+
+return {
+  shape = {
+    iron(), glowstone(), iron(),
+    antenna(), pearl(), iron(),
+    glass(), redstone(), glass(),
+  },
+  output = {
+    item = {
+      idname = 'OpenPeripheral:glasses',
+      data = 0,
+    },
+    count = 1,
+  },
+  type = 'craft',
+}
+
+-- vim: ft=lua shiftwidth=2 expandtab colorcolumn=45 tw=44

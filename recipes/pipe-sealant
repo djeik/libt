@@ -1,22 +1,17 @@
 return {
   shape = {
     [1] = {
-      idname = "minecraft:planks",
-      data = nil,
-    },
-    [4] = {
-      idname = "minecraft:planks",
-      data = nil,
+      idname = 'minecraft:dye',
+      data = 2,
     },
   },
   output = {
     item = {
-      idname = "minecraft:stick",
+      idname = 'BuildCraft|Transport:pipeWaterproof',
       data = 0,
     },
-    count = 4,
+    count = 1,
   },
   type = 'craft',
 }
-
 -- vim: ft=lua shiftwidth=2 expandtab colorcolumn=45 tw=44

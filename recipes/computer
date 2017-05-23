@@ -1,0 +1,38 @@
+local function stone()
+  return {
+    idname = 'minecraft:stone',
+    data = 0,
+  }
+end
+
+local function redstone()
+  return {
+    idname = 'minecraft:redstone',
+    data = 0,
+  }
+end
+
+local function glass()
+  return {
+    idname = 'minecraft:glass_pane',
+    data = 0,
+  }
+end
+
+return {
+  shape = {
+    stone(), stone(), stone(),
+    stone(), redstone(), stone(),
+    stone(), glass(), stone(),
+  },
+  output = {
+    item = {
+      idname = 'ComputerCraft:CC-Computer',
+      data = 0,
+    },
+    count = 1,
+  },
+  type = 'craft',
+}
+
+-- vim: ft=lua shiftwidth=2 expandtab colorcolumn=45 tw=44

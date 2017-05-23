@@ -1,0 +1,37 @@
+local function casing()
+  return {
+    idname = 'IC2:itemCasing',
+    data = 1,
+  }
+end
+
+local function redstone()
+  return {
+    idname = 'minecraft:redstone',
+    data = 0,
+  }
+end
+
+local function cable()
+  return {
+    idname = 'IC2:itemCable',
+    data = 13,
+  }
+end
+
+return {
+  shape = {
+    nil, cable(), nil,
+    casing(), redstone(), casing(),
+    casing(), redstone(), casing(),
+  },
+  output = {
+    item = {
+      idname = 'IC2:itemBatREDischarged',
+      data = 0,
+    },
+    count = 1,
+  },
+}
+
+-- vim: ft=lua shiftwidth=2 expandtab colorcolumn=45 tw=44

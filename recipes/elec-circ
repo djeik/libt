@@ -1,0 +1,44 @@
+local cable = function()
+  return {
+    idname = 'IC2:itemCable',
+    data = 0,
+  }
+end
+
+local plate = function()
+  return {
+    idname = 'IC2:itemPlates',
+    data = 4,
+  }
+end
+
+local redstone = function()
+  return {
+    idname = 'minecraft:redstone',
+    data = 0,
+  }
+end
+
+return {
+  shape = {
+    [1] = cable(),
+    [2] = cable(),
+    [3] = cable(),
+    [4] = redstone(),
+    [5] = plate(),
+    [6] = redstone(),
+    [7] = cable(),
+    [8] = cable(),
+    [9] = cable(),
+  },
+  output = {
+    item = {
+      idname = 'IC2:itemPartCircuit',
+      data = 0,
+    },
+    count = 1,
+  },
+  type = 'craft',
+}
+
+-- vim: ft=lua shiftwidth=2 expandtab colorcolumn=45 tw=44

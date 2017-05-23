@@ -1,0 +1,31 @@
+local function casing()
+  return {
+    idname = 'IC2:itemCasing',
+    data = 1,
+  }
+end
+
+local function glass()
+  return {
+    idname = 'minecraft:glass_pane',
+    data = 0,
+  }
+end
+
+return {
+  shape = {
+    nil, casing(), nil,
+    casing(), glass(), casing(),
+    nil, casing(), nil
+  },
+  output = {
+    item = {
+      idname = 'IC2:itemFluidCell',
+      data = 0,
+    },
+    count = 1,
+  },
+  type = 'craft',
+}
+
+-- vim: ft=lua shiftwidth=2 expandtab colorcolumn=45 tw=44

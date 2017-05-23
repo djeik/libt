@@ -1,0 +1,29 @@
+local function treetap()
+  return {
+    idname = 'IC2:itemTreetap',
+    data = 0,
+  }
+end
+
+local function powerUnit()
+  return {
+    idname = 'IC2:itemRecipePart',
+    data = 3,
+  }
+end
+
+return {
+  shape = {
+    treetap(), powerUnit(),
+  },
+  output = {
+    item = {
+      idname = 'IC2:itemTreetapElectric',
+      data = 0,
+    },
+    count = 1,
+  },
+  type = 'craft',
+}
+
+-- vim: ft=lua shiftwidth=2 expandtab colorcolumn=45 tw=44

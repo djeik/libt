@@ -1,0 +1,38 @@
+local function furnace()
+  return {
+    idname = 'IC2:blockMachine',
+    data = 1,
+  }
+end
+
+local function plate()
+  return {
+    idname = 'IC2:itemPlates',
+    data = 4
+  }
+end
+
+local function battery()
+  return {
+    idname = 'IC2:itemBatREDischarged',
+    data = 0,
+  }
+end
+
+return {
+  shape = {
+    nil, battery(), nil,
+    plate(), plate(), plate(),
+    nil, furnace(), nil
+  },
+  output = {
+    item = {
+      idname = 'IC2:blockGenerator',
+      data = 0,
+    },
+    count = 1,
+  },
+  type = 'craft',
+}
+
+-- vim: ft=lua shiftwidth=2 expandtab colorcolumn=45 tw=44

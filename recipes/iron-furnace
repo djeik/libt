@@ -1,0 +1,31 @@
+local function furnace()
+  return {
+    idname = 'minecraft:furnace',
+    data = 0,
+  }
+end
+
+local function plate()
+  return {
+    idname = 'IC2:itemPlates',
+    data = 4,
+  }
+end
+
+return {
+  shape = {
+    nil, plate(), nil,
+    plate(), nil, plate(),
+    plate(), furnace(), plate(),
+  },
+  output = {
+    item = {
+      idname = 'IC2:blockMachine',
+      data = 1,
+    },
+    count = 1,
+  },
+  type = 'craft',
+}
+
+-- vim: ft=lua shiftwidth=2 expandtab colorcolumn=45 tw=44
