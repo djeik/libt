@@ -1,8 +1,8 @@
 local AMOUNTS, SIDE, TIMEOUT = ...
 
 --- AMOUNTS is table where keys are
--- fully qualified item names and
--- values are amounts.
+-- serialized input designators and values
+-- are amounts.
 
 local t = loadfile("libt")()
 local libchest = t.requireStrictTg("libchest")
@@ -23,17 +23,20 @@ else
 end
 
 local function fulfilled()
-  for item, amt in pairs(AMOUNTS) do
+  for s, amt in pairs(AMOUNTS) do
+    local item = textutils.unserialize(s)
 
     local stacks = CHEST.getAllStacks()
     local count = 0
 
     for chestSlot, chestItem in pairs(stacks) do
-      if chestItem.basic().id == item then
+      local basic = chestItem.basic()
+      if basic.id == item.idname
+        and (item.data == nil or item.data == basic.dmg) then
         count = count + chestItem.basic().qty
       end
     end
-    if count < AMOUNTS[item] then
+    if count < amt then
       return false
     end
 

@@ -45,7 +45,7 @@ end
 -- invoking error.
 function planner.withState(f)
   local state = planner.load()
-  status, result = pcall(
+  local status, result = pcall(
     function()
       return f(state)
     end

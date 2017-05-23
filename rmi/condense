@@ -1,0 +1,6 @@
+-- simple crafting program that evenly spreads the stack in stock one across
+-- the 9 crafting slots and performs a craft
+
+local t = loadfile("libt")()
+
+-- vim: ft=lua shiftwidth=2 expandtab colorcolumn=45 tw=44

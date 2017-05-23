@@ -1,0 +1,40 @@
+local ARGS = { ... }
+local NAME = table.concat(ARGS, ' ')
+
+local t = loadfile("libt")()
+
+local lp = t.requireStrictTg('liblp')
+local pipe = lp.findRequestPipe(false)
+
+local rs = nil
+
+if pipe ~= nil then
+  local tput = t.requireStrict('libtput')
+  local listResources = tput.loadfile('rmi/listResources')
+  rs = listResources(pipe)
+else
+  local rmi = t.requireStrictTg('librmi')
+  local inventoryManager = rmi.bind('inventory-manager')
+  rs = inventoryManager.listResources()
+end
+
+for r in t.from(rs) do
+  local match = r.itemName:gmatch(
+    NAME:gsub(
+      "%a",
+      function(c)
+        return string.format(
+          "[%s%s]",
+          string.lower(c),
+          string.upper(c)
+        )
+      end
+    )
+  )
+  for _ in match do
+    print(textutils.serialize(r))
+    break
+  end
+end
+
+-- vim: ft=lua shiftwidth=2 expandtab colorcolumn=45 tw=44

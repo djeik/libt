@@ -593,6 +593,7 @@ function t.range(start, stop, step)
 end
 
 function t.irange(start, stop, step)
+  step = step or 1
   local i = start
   return function()
     if i <= stop then
@@ -675,6 +676,18 @@ function t.finally(func, done)
   else
     error(result)
   end
+end
+
+function t.tablecopy(src)
+  local dst = {}
+  for k, v in pairs(src) do
+    if type(v) == 'table' then
+      dst[k] = t.tablecopy(v)
+    else
+      dst[k] = v
+    end
+  end
+  return dst
 end
 
 return t

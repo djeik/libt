@@ -1,4 +1,4 @@
-local RECIPE_NAME = ...
+local RECIPE_NAME, COUNT = ...
 
 local t = loadfile("libt")()
   or error("failed to load libt")
@@ -6,14 +6,27 @@ local reply = t.requireStrictTg('libreply')
 reply.clearReplies()
 local recipe = t.requireStrictTg("librecipe")
 local rmi = t.requireStrictTg("librmi")
+local glass = t.requireStrictTg('libglass')
+local g = glass.bind()
 
 local planner = rmi.bind("planner")
+
+local function log(...)
+  print(...)
+  g.log('CRAFT: ', ...)
+  g.draw()
+end
+
+local function die(...)
+  log('ERROR: ', ...)
+  error(...)
+end
 
 local function withCraftingUnit(func)
   local name = planner.manageCraftingUnits(
     'acquireNextAvailable',
     os.getComputerLabel()
-  ) or error('no available crafting units.')
+  ) or die('no available crafting units.')
 
   print('got crafting unit ', name)
 
@@ -28,25 +41,68 @@ local function withCraftingUnit(func)
   )
 end
 
-local r = recipe.loadStrict(RECIPE_NAME)
-print('loaded recipe')
-local inventoryManager = rmi.bind('inventory-manager')
-local strategy, msg = inventoryManager.prepareCraft(
-  r.output.name,
-  r.output.count
-)
-if strategy == nil then
-  error(msg)
-end
-print('computed strategy of size ', #strategy)
+local RECIPE = recipe.loadStrict(RECIPE_NAME)
 
-for i, r in ipairs(strategy) do
-  print('crafting step ', i, '/', #strategy)
-  withCraftingUnit(
-    function(unit)
-      unit.doCraft(r)
-    end
-  )
+local count = nil
+if COUNT == nil then
+  count = RECIPE.output.count
+else
+  count = tonumber(COUNT)
 end
+
+local inventoryManager = rmi.bind('inventory-manager')
+local strategy, errors = inventoryManager.prepareCraft(
+  RECIPE.output.item,
+  count
+)
+
+if #errors > 0 then
+  local errors = recipe.groupErrors(errors)
+  log('Required items are missing.')
+  for _, e in ipairs(errors) do
+    local name = recipe.formatItem(e.item)
+    local info = e.info.have .. ' / ' .. e.info.need
+    log(name, ': ', info)
+  end
+  return nil
+end
+
+if #strategy == 0 then
+  log('no crafting to do')
+end
+
+local status, result = pcall(
+  function()
+    for i, r in ipairs(strategy) do
+      log('crafting step ', i, '/', #strategy)
+      withCraftingUnit(
+        function(unit)
+          g.setRecipe(r)
+          g.draw()
+          unit.doCraft(r)
+          print('step ', i, ' complete')
+          sleep(5)
+        end
+      )
+    end
+  end
+)
+
+g.setRecipe(nil)
+
+if not status then
+  die(result)
+end
+
+local post = rmi.bind('post-craft-request')
+
+print('requesting items')
+post.requestResource({
+  idname = RECIPE.output.item.idname,
+  data = RECIPE.output.item.data,
+  amount = count,
+})
+
+log('complete')
 
 -- vim: ft=lua shiftwidth=2 expandtab colorcolumn=45 tw=44

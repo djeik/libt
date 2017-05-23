@@ -1,0 +1,13 @@
+local ARGS = {...}
+local COMMAND = table.remove(ARGS, 1)
+
+local t = loadfile("libt")()
+local g = t.requireStrictTg('libglass')
+
+local function main(state)
+  return state[COMMAND](state, unpack(ARGS))
+end
+
+return g.state.with(main)
+
+-- vim: ft=lua shiftwidth=2 expandtab colorcolumn=45 tw=44

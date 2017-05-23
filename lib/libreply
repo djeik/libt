@@ -90,7 +90,8 @@ function treply.request(route, code, ...)
       args = args,
     }
   )
-  return unpack(t.read(tmsg.recvBlock("/msg/" .. replyTo)))
+  local rets = t.read(tmsg.recvBlock("/msg/" .. replyTo))
+  return unpack(rets)
 end
 
 -- | Advanced request function. Options is a

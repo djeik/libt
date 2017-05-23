@@ -1,0 +1,27 @@
+-- simple crafting program that evenly
+-- spreads the stack in stock one across the
+-- 9 crafting slots and performs a craft
+
+local SLOTS = {
+  2, 3, 5, 6, 7, 9, 10, 11
+}
+
+local q = turtle.getItemCount(1)
+
+if q % 9 ~= 0 then
+  print("Trying to condense stuff not multiple of nine.")
+  return false
+end
+
+local q = math.floor(q / 9)
+
+turtle.select(1)
+
+for i, slot in ipairs(SLOTS) do
+  turtle.transferTo(slot, q)
+end
+
+turtle.select(16)
+return turtle.craft()
+
+-- vim: ft=lua shiftwidth=2 expandtab colorcolumn=45 tw=44

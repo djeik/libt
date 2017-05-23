@@ -9,7 +9,6 @@ local recipe = t.requireStrictTg('librecipe')
 local inv = t.requireStrictTg('libinv')
 
 local pipe = lp.findRequestPipe()
-local items = pipe.getAvailableItems()
 local turtle = rmi.bind(os.getComputerLabel() .. '-turtle')
 
 local inputs = recipe.inputs(RECIPE)
@@ -17,11 +16,13 @@ local inputs = recipe.inputs(RECIPE)
 print('inputs: ', textutils.serialize(inputs))
 
 -- request all the inputs
-for idname, count in pairs(inputs) do
-  local qty, iid = inv.lookup(idname, items)
+for s, count in pairs(inputs) do
+  local item = textutils.unserialize(s)
+  local items = pipe.getAvailableItems()
+  local qty, iid = inv.lookup(item, items)
   if count > qty then
     error(
-      'not enough ' .. idname .. ' stored; ' ..
+      'not enough ' .. item.idname .. ' stored; ' ..
       'need ' .. tostring(count) .. ', have ' ..
       tostring(qty)
     )
@@ -29,7 +30,7 @@ for idname, count in pairs(inputs) do
 
   local status = pipe.makeRequest(iid, count)
   if status ~= 'DONE' then
-    msg = 'requesting ' .. idname .. ' failed with ' .. status
+    msg = 'requesting ' .. item.idname .. ' failed with ' .. status
     error(msg)
   end
 end

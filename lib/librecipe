@@ -1,3 +1,11 @@
+-- REMARK: an input designator is a table
+-- that identifies an item. This is done
+-- with its idname and it's data value (an
+-- integer); the fields are called `idname`
+-- and `data`.
+-- A data value can be 'nil', in which case
+-- any data will match.
+
 local t = loadfile("libt")()
   or error("failed to load libt")
 
@@ -5,6 +13,15 @@ local tput = t.requireStrict("libtput")
 local containers = t.requireStrictTg("libcontainers")
 local fsutils = t.requireStrictTg("libfs")
 local inv = t.requireStrictTg("libinv")
+local rmi = t.requireStrictTg('librmi')
+local glass = t.requireStrictTg('libglass')
+
+local g = glass.bind()
+
+local function log(...)
+  print(...)
+  g.log(...)
+end
 
 local recipe = {}
 recipe.VERSION = {0, 0, 1, 0}
@@ -21,7 +38,6 @@ function recipe.getRecipeStrict(name)
   if not fs.exists("recipes") then
     fs.makeDir("recipes")
   end
-  print('downloading recipe ', name)
   return tput.getStrict(recipe.path(name))
 end
 
@@ -33,7 +49,6 @@ function recipe.load(name, download)
   local r = CACHE[name]
 
   if r ~= nil then
-    print('got cached recipe ', name)
     return r
   end
 
@@ -48,7 +63,11 @@ function recipe.load(name, download)
   end
 
   if recipe.exists(name) then
-    local r = loadfile(recipe.path(name))()
+    local f = loadfile(recipe.path(name))
+    if f == nil then
+      error('recipe ' .. name .. ' is invalid')
+    end
+    local r = f()
     CACHE[name] = r
     return r
   else
@@ -62,7 +81,6 @@ end
 
 -- | Downloads every recipe.
 function recipe.getAll()
-  print('downloading all recipes')
   for name in tput.ilist(RECIPE_DIR) do
     recipe.getRecipeStrict(name)
   end
@@ -81,7 +99,6 @@ end
 -- | loads every recipe from disk
 function recipe.buildCache()
   local l = recipe.list()
-  print('caching ', #l, ' recipes')
   for name in t.from(l) do
     recipe.loadStrict(name, false)
   end
@@ -93,8 +110,8 @@ function recipe.loadStrict(name, ...)
 end
 
 -- | given a recipe, constructs a table
--- sending idnames to a count of how many
--- are needed to craft the recipe.
+-- sending inputstrings to a count of how
+-- many are needed to craft the recipe.
 function recipe.inputs(r)
   local d = containers.defaultdict.new(
     function()
@@ -102,8 +119,9 @@ function recipe.inputs(r)
     end
   )
 
-  for _, name in pairs(r.shape) do
-    d[name] = d[name] + 1
+  for _, item in pairs(r.shape) do
+    local s = t.show(item)
+    d[s] = d[s] + (r.times or 1)
   end
 
   return d
@@ -116,7 +134,7 @@ end
 
 recipe.checks = {
   outputIdname = function(r, idname)
-    return r.output.name == idname
+    return r.output.item.idname == idname
   end,
 
   outputAtLeast = function(r, count)
@@ -125,6 +143,10 @@ recipe.checks = {
 
   outputExactly = function(r, count)
     return r.output.count == count
+  end,
+
+  outputData = function(r, data)
+    return data == nil or r.output.item.data == data
   end,
 
   -- | recursive check
@@ -164,11 +186,21 @@ function recipe.search(recipes, search)
   return oks
 end
 
+function recipe.formatItem(item)
+  local data = item.data and tostring(item.data) or '*'
+  return item.idname .. '-' .. data
+end
+
 -- | Returns the number of times that a
 -- recipe must be crafted to produce at
 -- least `count` many of its output item.
-function recipe.times(recipe, count)
-  local c = recipe.output.count
+function recipe.times(r, count)
+  local c = r.output.count
+    or error(
+      'recipe for ' ..
+      recipe.formatItem(r.output.item) ..
+      ' has no output count'
+    )
   return math.ceil(count / c)
 end
 
@@ -207,77 +239,95 @@ end
 -- produce `count` many (default 1) of
 -- `idname` given the available inventory
 -- `items`.
--- `items` is a dict from LP ItemIdentifiers
--- to quantities. (This is exactly what
--- getAvailableItems() gives.)
+-- `items` is a list of pairs of LP
+-- ItemIdentifiers and quantities. (This is
+-- exactly what getAvailableItems() gives.)
 -- A crafting strategy is simply a list of
 -- recipes, which must be crafted in order.
 -- If the given idname cannot be crafted,
 -- the first return value is nil, and the
 -- second is a human-readable string
 -- explaining why.
-function recipe.craftStrategy(idname, items, count)
-  print(
-    'starting to make strategy for ', idname,
-    ' x', count,
-    ' with an inventory of size ', #items
-  )
+function recipe.craftStrategy(item, items, count)
   count = count or 1
-  local already, iid = inv.lookup(idname, items)
+  local already, iid, ix = inv.lookup(item, items)
   if already >= count then
     -- if we already have the necessary
     -- items, then we discount the number we
     -- need to take from the item store and
     -- produce an empty list of recipes to
     -- perform.
-    inv.consume(idname, count, items)
-    return {}
+    log(
+      recipe.formatItem(item),
+      ' ',
+      already,
+      ' -> ',
+      already - count
+    )
+
+    if ix ~= nil then
+      items[ix].amount = already - count
+    end
+
+    return {}, {}
   end
 
   -- consume all the ones we have, if we
   -- have any
-  if iid ~= nil then
-    items[iid] = 0
+  if ix ~= nil then
+    items[ix].amount = 0
   end
+
   -- compute the new count of guys we need
-  count = count - already
+  local origCount = count
   if already ~= 0 then
-    print('adjusted count to ', count)
+    count = count - already
   end
 
   local allRecipes = recipe.loadAll()
 
-  print('loaded all ', #allRecipes, ' recipes')
-
   -- find all recipes that produce this item
   local rs = recipe.search(
     allRecipes, {
-      outputIdname = idname,
+      outputIdname = item.idname,
+      outputData = item.data,
     }
   )
 
-  if not rs then
-    return nil,
-      idname .. ' is insufficient in storage and ' ..
-      'no known recipe produces it'
+  if #rs == 0 then
+    -- false plus a list of errors, in this
+    -- case a singleton
+    return {}, {
+      {
+        item = item,
+        info = {
+          have = already,
+          need = origCount,
+        },
+      },
+    }
   end
 
   -- find the best recipe
   local cmp = recipe.mkCmpOutput(count)
   table.sort(rs, cmp)
   local r = rs[1] -- take the best one
-  print('best recipe produces ', r.output.count)
+  -- print('best recipe produces ', r.output.count)
 
   -- now we took the best one, but it's
   -- possible that the best recipe produces
   -- too few, so we might need to repeat it
 
   local times = recipe.times(r, count)
-  print('so we will need to use it ', times, ' times')
+  -- storing the times inside the recipe
+  -- makes things aware of repetitions!
+  r.times = times
+  -- print('so we will need to use it ', times, ' times')
 
-  -- these are the inputs *for a single*
-  -- recipe. We will need to multiply their
-  -- counts by the number `times` later!
+  -- normally, inputs gives the input counts
+  -- for one repetition, but by storing the
+  -- times inside, these counts are
+  -- automatically multiplied.
   local inputs = recipe.inputs(r)
 
   -- prepare the crafting strategy.
@@ -285,22 +335,46 @@ function recipe.craftStrategy(idname, items, count)
   -- first we need to put in the strategies
   -- for all its inputs.
   local result = {}
+  local errors = {}
 
-  -- k is the idname of the input, c is its
+  -- k is the itemstring of the input, c is its
   -- count
-  for k, c in pairs(inputs) do
-    local s = recipe.craftStrategy(k, items, times * c)
-    t.extend(result, s)
+  for s, c in pairs(inputs) do
+    local item = t.read(s)
+    local strats, newErrors = recipe.craftStrategy(item, items, c)
+    t.extend(result, strats)
+    t.extend(errors, newErrors)
   end
 
-  -- now we put `times` many copies of the
-  -- main recipe at the end.
+  r.times = times
+  table.insert(result, r)
 
-  for i=1,times do
-    table.insert(result, r)
+  return result, errors
+end
+
+-- | Given a list of errors produced by
+-- craftStrategy, collapse common items and
+-- add up their counts.
+function recipe.groupErrors(errors)
+  local r = containers.defaultdict.new(
+    function() return {have = 0, need = 0} end,
+    true
+  )
+  for e in t.from(errors) do
+    r[t.show(e.item)].have = r[t.show(e.item)].have + e.info.have
+    r[t.show(e.item)].need = r[t.show(e.item)].need + e.info.need
   end
-
-  return result
+  local s = {}
+  for k, v in pairs(r) do
+    local i = t.read(k)
+    table.insert(
+      s, {
+        item = i,
+        info = v,
+      }
+    )
+  end
+  return s
 end
 
 return recipe

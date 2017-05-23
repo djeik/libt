@@ -12,14 +12,16 @@ local PIPE = lp.findRequestPipe()
 
 local function fulfilled()
   local items = PIPE.getAvailableItems()
-  for item, desired in pairs(AMOUNTS) do
+  for s, desired in pairs(AMOUNTS) do
+    local item = textutils.unserialize(s)
     local count = 0
 
     for _, p in ipairs(items) do
       local iid = p.getValue1()
       local amt = p.getValue2()
 
-      if iid.getIdName() == item then
+      if iid.getIdName() == item.idname
+        and (item.data == nil or iid.getData() == item.data) then
         count = count + amt
       end
     end

@@ -1,16 +1,20 @@
 -- | computes the crafting strategy for a
 -- given idname and count to make
 
-local IDNAME, COUNT = ...
+local ITEM, COUNT = ...
 
 local t = loadfile("libt")()
 local lp = t.requireStrictTg("liblp")
 local recipe = t.requireStrictTg("librecipe")
+local glass = t.requireStrictTg('libglass')
 
+local g = glass.bind()
 local pipe = lp.findRequestPipe()
 local items = pipe.getAvailableItems()
 
+g.log('preparing recipe ', recipe.formatItem(ITEM))
+
 -- Create a crafting strategy or nil
-return recipe.craftStrategy(IDNAME, items, COUNT)
+return recipe.craftStrategy(ITEM, items, COUNT)
 
 -- vim: ft=lua shiftwidth=2 expandtab colorcolumn=45 tw=44

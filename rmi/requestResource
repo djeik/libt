@@ -1,0 +1,62 @@
+-- | libreply compatible code to cause a
+-- computer attached to a logistics request
+-- pipe to make a request for a given
+-- quantity of an item.
+--
+-- The arguments are:
+-- * RESOURCE (table) - Specifies the
+--   resource to request. The following keys
+--   are required:
+--   * itemName (string) - The name of the
+--     item to request.
+--   * modName (string) - The name of the
+--     mod the item is from. Used to
+--     disambiguate.
+--   * amount (number) - The amount of the
+--     item to request.
+-- * PIPE - if it's a string, then it's
+--   intepreted as the side for the pipe.
+--   If it's nil, then an adjacent pipe is
+--   chosen arbitrarily.
+--   If it's neither, then we assume this is
+--   the pipe object.
+
+local t = loadfile("libt")()
+  or error("failed to load libt")
+
+local lp = t.requireStrictTg('liblp')
+local inv = t.requireStrictTg('libinv')
+
+local RESOURCE, PIPE = ...
+
+-- RESOURCE is a table with the format:
+-- idname (string)
+-- data (number)
+-- amount (number)
+-- allowPartial (boolean, default false)
+
+if type(PIPE) == 'string' then
+  PIPE = peripheral.wrap(PIPE)
+elseif PIPE == nil then
+  PIPE = lp.findRequestPipe()
+end
+
+local items = PIPE.getAvailableItems()
+local qty, iid = inv.lookup(RESOURCE, items)
+
+if iid == nil then
+  error('no match')
+end
+
+if qty < RESOURCE.amount then
+  error('insufficient')
+end
+
+local r = PIPE.makeRequest(iid, RESOURCE.amount)
+if r == 'DONE' then
+  return nil
+else
+  error('pipe request failed with ' .. r)
+end
+
+-- vim: ft=lua shiftwidth=2 expandtab colorcolumn=45 tw=44

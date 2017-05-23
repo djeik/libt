@@ -1,8 +1,9 @@
 local t = loadfile("libt")()
   or error("failed to load libt")
 
-local tput = t.require("libtput")
-local reply = t.require("libreply")
+local tput = t.requireStrict("libtput")
+local reply = t.requireStrictTg("libreply")
+local tmsg = t.requireStrictTg('libtmsg')
 
 local rmi = {}
 
@@ -66,26 +67,52 @@ else
   end
 end
 
-local function mkBindMT(route)
-  return {
-    __index = function(table, key)
-      return function(...)
-        local status, result = rmi.request(route, key, ...)
-        if status then
-          return result
-        else
-          error(result)
+rmi.replies = {
+  -- replies are immediately awaited for,
+  -- synchronously
+  sync = function(route)
+    return {
+      __index = function(tab, key)
+        return function(...)
+          local rets = { rmi.request(route, key, ...) }
+          local status = table.remove(rets, 1)
+          if status then
+            return unpack(rets)
+          else
+            error(unpack(rets))
+          end
         end
       end
-    end
-  }
-end
+    }
+  end,
+  -- replies are ignored entirely
+  none = function(route)
+    return {
+      __index = function(tab, key)
+        return function(...)
+          local args = { ... }
+          local code = rmi.loadTemplate(key)
+          tmsg.sendLua(
+            '/msg/' .. route, {
+              code = code,
+              args = args,
+            }
+          )
+        end
+      end,
+    }
+  end,
+}
 
 -- | Creates a proxy object for the machine
 -- associated with the given route.
-function rmi.bind(route)
+function rmi.bind(route, options)
+  options = options or {}
+  options.replies = options.replies
+    or rmi.replies.sync
+
   local proxy = {}
-  setmetatable(proxy, mkBindMT(route))
+  setmetatable(proxy, options.replies(route))
   return proxy
 end
 

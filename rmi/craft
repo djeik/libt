@@ -25,35 +25,52 @@ local l2g = {
 
 local stacks = chest.getAllStacks()
 
-print(textutils.serialize(RECIPE.shape))
-
 for srcslot, itemthere in pairs(stacks) do
   for dstslot, item in pairs(RECIPE.shape) do
-    print(item, ' == ', itemthere.basic().id)
-    if item == itemthere.basic().id then
-      turtle.select(l2g[dstslot])
-      turtle.suckDown(1)
+    turtle.select(l2g[dstslot])
+    local basic = itemthere.basic()
+    if item.idname == basic.id and
+      (item.data == nil or item.data == basic.dmg) then
+      local missing = (RECIPE.times or 1) - turtle.getItemCount()
+      if missing > 0 then
+        turtle.suckDown(missing)
+      end
     end
   end
 end
 
-turtle.select(16)
-if not turtle.craft() then
-  error('craft failed!')
+local function notDone()
+  for i=1,16 do
+    if turtle.getItemCount(i) > 0 then
+      return true
+    end
+  end
+  return false
 end
-local iid = turtle.getItemDetail(16)
-turtle.dropDown()
+
+local iid = nil
+turtle.select(16)
+
+while notDone() do
+  if not turtle.craft() then
+    error('craft failed!')
+  end
+  iid = turtle.getItemDetail(16)
+  turtle.dropDown()
+end
 
 local items = lpNetwork.listResources()
 
 local expectedItems = {}
-for t in t.from(items) do
-  if t.idname == iid.name then
-    expectedItems[t.idname] = t.amount + iid.count
+for a in t.from(items) do
+  if a.idname == iid.name and a.data == iid.damage then
+    local s = textutils.serialize({
+      idname = a.idname,
+      data = a.data,
+    })
+    expectedItems[s] = a.amount + iid.count
   end
 end
-
-print(textutils.serialize(expectedItems))
 
 local extractChest = tput.loadfile('rmi/extractChest')
 extractChest('down', {'bottom'})

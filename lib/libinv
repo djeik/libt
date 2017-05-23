@@ -7,12 +7,13 @@ inv.VERSION = { 0, 0, 1, 0 }
 -- | Check whether any of the items in the
 -- list contains the given idname.
 -- Returns how many of them we have.
-function inv.lookup(idname, items)
-  for _, pair in ipairs(items) do
+function inv.lookup(item, items)
+  for i, pair in ipairs(items) do
     local iid = pair.getValue1()
-    local qty = pair.getValue2()
-    if iid.getIdName() == idname then
-      return qty, iid
+    local qty = pair.amount or pair.getValue2()
+    if iid.getIdName() == item.idname and
+      (item.data == nil or item.data == iid.getData()) then
+      return qty, iid, i
     end
   end
 
@@ -24,17 +25,17 @@ end
 -- * the quantity of the item after
 -- consumption
 -- * the ItemIdentifier
-function inv.consume(idname, count, items)
-  local qty, iid = inv.lookup(idname, items)
+function inv.consume(item, count, items)
+  local qty, iid, ix = inv.lookup(item, items)
   if not qty then
-    error('there are no ' .. idname)
+    error('there are no ' .. item.idname)
   end
   if qty >= count then
-    items[iid] = qty - count
-    return true, qty - count, iid
+    items[ix].amount = qty - count
+    return true, qty - count, iid, i
   end
 
-  return false, qty, iid
+  return false, qty, iid, i
 end
 
 return inv
