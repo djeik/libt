@@ -127,7 +127,9 @@ glass.state.functions = {
   end,
 
   _drawRecipe = function(self, p, r)
-    return recipeDrawStrat[r.type](p, r)
+    local strat = recipeDrawStrat[r.type]
+      or error('no such strategy ' .. t.show(r.type))
+    return strat(p, r)
   end,
 
   _drawLog = function(self, p, log)
