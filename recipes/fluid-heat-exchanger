@@ -15,23 +15,23 @@ local function cell()
   }
 end
 
-local function generator()
+local function conductor()
   return {
-    idname = 'IC2:blockGenerator',
-    data = 1,
+    idname = 'IC2:itemRecipePart',
+    data = 5,
   }
 end
 
 return {
   shape = {
     casing(), cell(), casing(),
-    cell(), generator(), cell(),
+    cell(), conductor(), cell(),
     casing(), cell(), casing(),
   },
   output = {
     item = {
-      idname = 'IC2:blockGenerator',
-      data = 7,
+      idname = 'IC2:blockHeatGenerator',
+      data = 1,
     },
     count = 1,
   },

@@ -1,27 +1,25 @@
-local function plate()
+local function wrench()
   return {
-    idname = 'IC2:itemPlates',
-    data = 1,
+    idname = 'IC2:itemToolWrench',
+    data = 0,
   }
 end
 
-local function motor()
+local function power()
   return {
     idname = 'IC2:itemRecipePart',
-    data = 1,
+    data = 3,
   }
 end
 
 return {
   shape = {
-    plate(), nil, plate(),
-    nil, motor(), nil,
-    plate(), nil, plate(),
+    wrench(), power(),
   },
   output = {
     item = {
-      idname = 'IC2:upgradeModule',
-      data = 4,
+      idname = 'IC2:itemToolWrenchElectric',
+      data = nil,
     },
     count = 1,
   },

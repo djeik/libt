@@ -1,0 +1,38 @@
+local function redstone()
+  return { idname = 'minecraft:redstone' }
+end
+
+local function glowstone()
+  return {
+    idname = 'minecraft:glowstone_dust'
+  }
+end
+
+local function lapis()
+  return {
+    idname = 'minecraft:dye',
+    data = 4,
+  }
+end
+
+local function circuit()
+  return { idname = 'IC2:itemPartCircuit' }
+end
+
+return {
+  shape = {
+    redstone(), glowstone(), redstone(),
+    lapis(), circuit(), lapis(),
+    redstone(), glowstone(), redstone(),
+  },
+  output = {
+    item = {
+      idname = 'IC2:itemPartCircuitAdv',
+      data = 0,
+    },
+    count = 1,
+  },
+  type = 'craft',
+}
+
+-- vim: ft=lua shiftwidth=2 expandtab colorcolumn=45 tw=44

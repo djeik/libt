@@ -1,0 +1,45 @@
+local function circuit()
+  return {
+    idname = 'IC2:itemPartCircuit',
+    data = 0,
+  }
+end
+
+local function toolbox()
+  return {
+    idname = 'IC2:itemToolbox',
+    data = 0,
+  }
+end
+
+local function casing()
+  return {
+    idname = 'IC2:blockMachine',
+    data = 0,
+  }
+end
+
+local function coil()
+  return {
+    idname = 'IC2:itemRecipePart',
+    data = 0,
+  }
+end
+
+return {
+  shape = {
+    nil, circuit(), nil,
+    toolbox(), casing(), toolbox(),
+    coil(), coil(), coil(),
+  },
+  output = {
+    item = {
+      idname = 'IC2:blockMachine2',
+      data = 4,
+    },
+    count = 1,
+  },
+  type = 'craft',
+}
+
+-- vim: ft=lua shiftwidth=2 expandtab colorcolumn=45 tw=44

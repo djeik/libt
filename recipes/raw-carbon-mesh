@@ -1,19 +1,17 @@
-local function plank()
+local function fiber()
   return {
-    idname = 'minecraft:planks',
-    data = nil,
+    idname = 'IC2:itemPartCarbonFibre',
+    data = 0,
   }
 end
 
 return {
   shape = {
-    nil, plank(), nil,
-    plank(), plank(), plank(),
-    plank(), nil, nil
+    fiber(), fiber(),
   },
   output = {
     item = {
-      idname = 'IC2:itemTreetap',
+      idname = 'IC2:itemPartCarbonMesh',
       data = 0,
     },
     count = 1,

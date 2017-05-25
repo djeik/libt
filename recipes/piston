@@ -1,40 +1,40 @@
-local function redstone()
+local function plank()
   return {
-    idname = 'minecraft:redstone_block',
-    data = 0,
+    idname = 'minecraft:planks',
+    data = nil,
   }
 end
 
-local function antenna()
+local function iron()
   return {
-    idname = 'OpenPeripheral:generic',
+    idname = 'minecraft:iron_ingot',
     data = 0,
   }
 end
 
 local function stone()
   return {
-    idname = 'minecraft:stone',
+    idname = 'minecraft:cobblestone',
     data = 0,
   }
 end
 
-local function pearl()
+local function redstone()
   return {
-    idname = 'minecraft:ender_pearl',
+    idname = 'minecraft:redstone',
     data = 0,
   }
 end
 
 return {
   shape = {
-    stone(), antenna(), stone(),
-    stone(), pearl(), stone(),
+    plank(), plank(), plank(),
+    stone(), iron(), stone(),
     stone(), redstone(), stone(),
   },
   output = {
     item = {
-      idname = 'OpenPeripheral:glassesbridge',
+      idname = 'minecraft:piston',
       data = 0,
     },
     count = 1,

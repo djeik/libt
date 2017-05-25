@@ -1,0 +1,30 @@
+local function redstone()
+  return {
+    idname = 'minecraft:redstone',
+    data = 0,
+  }
+end
+
+local function diamond()
+  return {
+    idname = 'IC2:itemDust2',
+    data = 1,
+  }
+end
+
+return {
+  shape = {
+    redstone(), diamond(), redstone(),
+    diamond(), redstone(), diamond(),
+    redstone(), diamond(), redstone(),
+  },
+  output = {
+    item = {
+      idname = 'IC2:itemDust2',
+      data = 2,
+    },
+    count = 9,
+  },
+}
+
+-- vim: ft=lua shiftwidth=2 expandtab colorcolumn=45 tw=44

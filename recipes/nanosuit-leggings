@@ -1,27 +1,27 @@
 local function plate()
   return {
-    idname = 'IC2:itemPlates',
-    data = 1,
+    idname = 'IC2:itemPartCarbonPlate',
+    data = 0,
   }
 end
 
-local function motor()
+local function crystal()
   return {
-    idname = 'IC2:itemRecipePart',
-    data = 1,
+    idname = 'IC2:itemBatCrystal',
+    data = nil,
   }
 end
 
 return {
   shape = {
+    plate(), crystal(), plate(),
     plate(), nil, plate(),
-    nil, motor(), nil,
     plate(), nil, plate(),
   },
   output = {
     item = {
-      idname = 'IC2:upgradeModule',
-      data = 4,
+      idname = 'IC2:itemArmorNanoLegs',
+      data = 0,
     },
     count = 1,
   },

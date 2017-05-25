@@ -1,0 +1,38 @@
+local function copper()
+  return {
+    idname = 'IC2:itemPlates',
+    data = 0,
+  }
+end
+
+local function circuit()
+  return {
+    idname = 'IC2:itemPartCircuit',
+    data = 0,
+  }
+end
+
+local function tin()
+  return {
+    idname = 'IC2:itemPlates',
+    data = 1,
+  }
+end
+
+return {
+  shape = {
+    copper(), circuit(), copper(),
+    tin(), copper(), tin(),
+    copper(), tin(), copper(),
+  },
+  output = {
+    item = {
+      idname = 'IC2:reactorHeatSwitch',
+      data = 1,
+    },
+    count = 1,
+  },
+  type = 'craft',
+}
+
+-- vim: ft=lua shiftwidth=2 expandtab colorcolumn=45 tw=44

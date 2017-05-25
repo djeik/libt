@@ -11,5 +11,6 @@ return {
       data = nil,
     },
   },
+  type = 'craft',
 }
 -- vim: ft=lua shiftwidth=2 expandtab colorcolumn=45 tw=44

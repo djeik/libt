@@ -1,0 +1,49 @@
+local function heat()
+  return {
+    idname = 'IC2:reactorHeatSwitchDiamond',
+    data = 1,
+  }
+end
+
+local function battery()
+  return {
+    idname = 'IC2:itemAdvBat',
+    data = nil,
+  }
+end
+
+local function luminator()
+  return {
+    idname = 'IC2:blockLuminatorDark',
+  }
+end
+
+local function glass()
+  return { idname = 'IC2:blockAlloyGlass' }
+end
+
+local function rubber()
+  return { idname = 'IC2:itemRubber' }
+end
+
+local function circuit()
+  return { idname = 'IC2:itemPartCircuitAdv' }
+end
+
+return {
+  shape = {
+    heat(), battery(), heat(),
+    luminator(), glass(), luminator(),
+    rubber(), circuit(), rubber(),
+  },
+  output = {
+    item = {
+      idname = 'IC2:itemNightvisionGoggles',
+      data = nil,
+    },
+    count = 1,
+  },
+  type = 'craft',
+}
+
+-- vim: ft=lua shiftwidth=2 expandtab colorcolumn=45 tw=44

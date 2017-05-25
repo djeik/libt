@@ -7,13 +7,13 @@ end
 
 return {
   shape = {
-    nil, plank(), nil,
     plank(), plank(), plank(),
-    plank(), nil, nil
+    plank(), nil, plank(),
+    plank(), plank(), plank(),
   },
   output = {
     item = {
-      idname = 'IC2:itemTreetap',
+      idname = 'minecraft:chest',
       data = 0,
     },
     count = 1,

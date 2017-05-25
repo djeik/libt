@@ -1,13 +1,13 @@
 local function casing()
   return {
     idname = 'IC2:itemCasing',
-    data = 1,
+    data = 4,
   }
 end
 
-local function redstone()
+local function glass()
   return {
-    idname = 'minecraft:redstone',
+    idname = 'minecraft:glass',
     data = 0,
   }
 end
@@ -15,22 +15,29 @@ end
 local function cable()
   return {
     idname = 'IC2:itemCable',
-    data = 13,
+    data = 0,
+  }
+end
+
+local function tin()
+  return {
+    idname = 'IC2:itemCable',
+    data = 10,
   }
 end
 
 return {
   shape = {
-    nil, cable(), nil,
-    casing(), redstone(), casing(),
-    casing(), redstone(), casing(),
+    casing(), cable(), casing(),
+    glass(), tin(), glass(),
+    glass(), glass(), glass(),
   },
   output = {
     item = {
-      idname = 'IC2:itemBatREDischarged',
+      idname = 'IC2:blockLuminatorDark',
       data = 0,
     },
-    count = 1,
+    count = 8,
   },
   type = 'craft',
 }

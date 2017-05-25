@@ -1,0 +1,52 @@
+local function antenna()
+  return {
+    idname = 'OpenPeripheral:generic',
+    data = 0,
+  }
+end
+
+local function bone()
+  return {
+    idname = 'minecraft:bone',
+    data = 0,
+  }
+end
+
+local function redstone()
+  return {
+    idname = 'minecraft:redstone',
+    data = 0,
+  }
+end
+
+local function ender()
+  return {
+    idname = 'minecraft:ender_pearl',
+    data = 0,
+  }
+end
+
+local function slime()
+  return {
+    idname = 'minecrarft:slime_ball',
+    data = 0,
+  }
+end
+
+return {
+  shape = {
+    antenna(), bone(), nil,
+    redstone(), ender(), nil,
+    slime(), nil, nil,
+  },
+  output = {
+    item = {
+      idname = 'OpenPeripheral:keybaord',
+      data = 0,
+    },
+    count = 1,
+  },
+  type = 'craft',
+}
+
+-- vim: ft=lua shiftwidth=2 expandtab colorcolumn=45 tw=44

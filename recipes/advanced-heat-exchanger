@@ -1,0 +1,45 @@
+local function plate()
+  return {
+    idname = 'IC2:itemPlates',
+    data = 8,
+  }
+end
+
+local function circuit()
+  return {
+    idname = 'IC2:itemPartCircuit',
+    data = 0,
+  }
+end
+
+local function heat()
+  return {
+    idname = 'IC2:reactorHeatSwitch',
+    data = 0,
+  }
+end
+
+local function copper()
+  return {
+    idname = 'IC2:itemPlates',
+    data = 0,
+  }
+end
+
+return {
+  shape = {
+    plate(), circuit(), plate(),
+    heat(), copper(), heat(),
+    plate(), circuit(), plate(),
+  },
+  output = {
+    item = {
+      idname = 'IC2:reactorHeatSwitchDiamond',
+      data = 0,
+    },
+    count = 1,
+  },
+  type = 'craft',
+}
+
+-- vim: ft=lua shiftwidth=2 expandtab colorcolumn=45 tw=44

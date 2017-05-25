@@ -5,15 +5,29 @@ local function plank()
   }
 end
 
+local function cable()
+  return {
+    idname = 'IC2:itemCable',
+    data = 13,
+  }
+end
+
+local function battery()
+  return {
+    idname = 'IC2:itemBatREDischarged',
+    data = 0,
+  }
+end
+
 return {
   shape = {
-    nil, plank(), nil,
+    plank(), cable(), plank(),
+    battery(), battery(), battery(),
     plank(), plank(), plank(),
-    plank(), nil, nil
   },
   output = {
     item = {
-      idname = 'IC2:itemTreetap',
+      idname = 'IC2:blockElectric',
       data = 0,
     },
     count = 1,

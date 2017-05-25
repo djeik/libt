@@ -7,31 +7,28 @@ end
 
 local function cell()
   return {
-    idname = 'IC2:itemFluidCell',
+    idname = 'IC2:itemCellEmpty',
     data = 0,
-    nbt = {
-      empty = true,
-    },
   }
 end
 
-local function generator()
+local function heat()
   return {
-    idname = 'IC2:blockGenerator',
-    data = 1,
+    idname = 'IC2:itemRecipePart',
+    data = 5,
   }
 end
 
 return {
   shape = {
-    casing(), cell(), casing(),
-    cell(), generator(), cell(),
-    casing(), cell(), casing(),
+    casing(), casing(), casing(),
+    cell(), cell(), cell(),
+    casing(), heat(), casing(),
   },
   output = {
     item = {
-      idname = 'IC2:blockGenerator',
-      data = 7,
+      idname = 'IC2:blockMachine2',
+      data = 13,
     },
     count = 1,
   },

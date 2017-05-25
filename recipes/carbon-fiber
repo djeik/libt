@@ -1,19 +1,19 @@
-local function plank()
+local function dust()
   return {
-    idname = 'minecraft:planks',
-    data = nil,
+    idname = 'IC2:itemDust',
+    data = 2,
   }
 end
 
 return {
   shape = {
-    nil, plank(), nil,
-    plank(), plank(), plank(),
-    plank(), nil, nil
+    dust(), dust(), nil,
+    dust(), dust(), nil,
+    nil, nil, nil,
   },
   output = {
     item = {
-      idname = 'IC2:itemTreetap',
+      idname = 'IC2:itemPartCarbonFibre',
       data = 0,
     },
     count = 1,

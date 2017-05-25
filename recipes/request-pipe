@@ -1,0 +1,38 @@
+local function pipe()
+  return {
+    idname = 'LogisticsPipes:item.PipeItemsBasicLogistics',
+    data = 0,
+  }
+end
+
+local function circuit()
+  return {
+    idname = 'BuildCraft|Silicon:redstoneChipset',
+    data = 2,
+  }
+end
+
+local function gear()
+  return {
+    idname = 'BuildCraft|Core:ironGearItem',
+    data = 0,
+  }
+end
+
+return {
+  shape = {
+    circuit(), nil, nil,
+    pipe(), nil, nil,
+    gear(), nil, nil,
+  },
+  output = {
+    item = {
+      idname = 'LogisticsPipes:item.PipeItemsRequestLogistics',
+      data = 0,
+    },
+    count = 1,
+  },
+  type = 'craft',
+}
+
+-- vim: ft=lua shiftwidth=2 expandtab colorcolumn=45 tw=44

@@ -1,0 +1,45 @@
+local function cable()
+  return {
+    idname = 'IC2:itemCable',
+    data = 0,
+  }
+end
+
+local function casing()
+  return {
+    idname = 'IC2:itemCasing',
+    data = 2,
+  }
+end
+
+local function surfur()
+  return {
+    idname = 'IC2:itemDust',
+    data = 13,
+  }
+end
+
+local function lead()
+  return {
+    idname = 'IC2:itemDust',
+    data = 10,
+  }
+end
+
+return {
+  shape = {
+    cable(), casing(), cable(),
+    casing(), surfur(), casing(),
+    casing(), lead(), casing(),
+  },
+  output = {
+    item = {
+      idname = 'IC2:itemAdvBat',
+      data = 26,
+    },
+    count = 1,
+  },
+  type = 'craft',
+}
+
+-- vim: ft=lua shiftwidth=2 expandtab colorcolumn=45 tw=44

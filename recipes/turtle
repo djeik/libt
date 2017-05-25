@@ -1,0 +1,38 @@
+local function iron()
+  return {
+    idname = 'minecraft:iron_ingot',
+    data = 0,
+  }
+end
+
+local function chest()
+  return {
+    idname = 'minecraft:chest',
+    data = 0,
+  }
+end
+
+local function computer()
+  return {
+    idname = 'ComputerCraft:CC-Computer',
+    data = 0,
+  }
+end
+
+return {
+  shape = {
+    iron(), iron(), iron(),
+    iron(), computer(), iron(),
+    iron(), chest(), iron(),
+  },
+  output = {
+    item = {
+      idname = 'ComputerCraft:CC-Turtle',
+      data = 0,
+    },
+    count = 1,
+  },
+  type = 'craft',
+}
+
+-- vim: ft=lua shiftwidth=2 expandtab colorcolumn=45 tw=44

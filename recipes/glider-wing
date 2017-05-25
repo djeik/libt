@@ -1,0 +1,31 @@
+local function leather()
+  return {
+    idname = 'minecraft:leather',
+    data = 0,
+  }
+end
+
+local function stick()
+  return {
+    idname = 'minecraft:stick',
+    data = 0,
+  }
+end
+
+return {
+  shape = {
+    nil, stick(), leather(),
+    stick(), leather(), leather(),
+    leather(), leather(), leather(),
+  },
+  output = {
+    item = {
+      idname = 'OpenBlocks:generic',
+      data = 0,
+    },
+    count = 1,
+  },
+  type = 'craft',
+}
+
+-- vim: ft=lua shiftwidth=2 expandtab colorcolumn=45 tw=44

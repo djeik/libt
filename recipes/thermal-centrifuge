@@ -1,0 +1,52 @@
+local function coil()
+  return {
+    idname = 'IC2:itemRecipePart',
+    data = 0,
+  }
+end
+
+local function laser()
+  return {
+    idname = 'IC2:itemToolMiningLaser',
+    data = 0,
+  }
+end
+
+local function iron()
+  return {
+    idname = 'minecraft:iron_ingot',
+    data = 0,
+  }
+end
+
+local function advmachine()
+  return {
+    idname = 'IC2:blockMachine',
+    data = 12,
+  }
+end
+
+local function motor()
+  return {
+    idname = 'IC2:itemRecipePart',
+    data = 1,
+  }
+end
+
+return {
+  shape = {
+    coil(), laser(), coil(),
+    iron(), advmachine(), iron(),
+    iron(), motor(), iron(),
+  },
+  output = {
+    item = {
+      idname = 'IC2:blockMachine2',
+      data = 3,
+    },
+    count = 1,
+  },
+  type = 'craft',
+}
+
+-- vim: ft=lua shiftwidth=2 expandtab colorcolumn=45 tw=44

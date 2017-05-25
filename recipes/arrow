@@ -1,0 +1,38 @@
+local function flint()
+  return {
+    idname = 'minecraft:flint',
+    data = 0,
+  }
+end
+
+local function stick()
+  return {
+    idname = 'minecraft:stick',
+    data = 0,
+  }
+end
+
+local function feather()
+  return {
+    idname = 'minecraft:feather',
+    data = 0,
+  }
+end
+
+return {
+  shape = {
+    flint(), nil, nil,
+    stick(), nil, nil,
+    feather(), nil, nil,
+  },
+  output = {
+    item = {
+      idname = 'minecraft:arrow',
+      data = 0,
+    },
+    count = 4,
+  },
+  type = 'craft',
+}
+
+-- vim: ft=lua shiftwidth=2 expandtab colorcolumn=45 tw=44

@@ -1,0 +1,38 @@
+local function plate()
+  return {
+    idname = 'IC2:itemPlates',
+    data = 2,
+  }
+end
+
+local function cable()
+  return {
+    idname = 'IC2:itemCable',
+    data = 0,
+  }
+end
+
+local function battery()
+  return {
+    idname = 'IC2:itemAdvBat',
+    data = nil,
+  }
+end
+
+return {
+  shape = {
+    plate(), cable(), plate(),
+    battery(), battery(), battery(),
+    plate(), plate(), plate(),
+  },
+  output = {
+    item = {
+      idname = 'IC2:blockElectric',
+      data = 7,
+    },
+    count = 1,
+  },
+  type = 'craft',
+}
+
+-- vim: ft=lua shiftwidth=2 expandtab colorcolumn=45 tw=44

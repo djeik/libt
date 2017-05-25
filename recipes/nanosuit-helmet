@@ -1,0 +1,37 @@
+local function plate()
+  return {
+    idname = 'IC2:itemPartCarbonPlate',
+    data = 0,
+  }
+end
+
+local function goggles()
+  return {
+    idname = 'IC2:itemNightvisionGoggles',
+    data = nil,
+  }
+end
+
+local function crystal()
+  return {
+    idname = 'IC2:itemBatCrystal',
+    data = nil,
+  }
+end
+
+return {
+  shape = {
+    plate(), crystal(), plate(),
+    plate(), goggles(), plate(),
+  },
+  output = {
+    item = {
+      idname = 'IC2:itemArmorNanoHelmet',
+      data = 0,
+    },
+    count = 1,
+  },
+  type = 'craft',
+}
+
+-- vim: ft=lua shiftwidth=2 expandtab colorcolumn=45 tw=44

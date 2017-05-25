@@ -1,0 +1,43 @@
+local function casing()
+  return {
+    idname = 'IC2:itemCasing',
+    data = 4,
+  }
+end
+
+local function circuit()
+  return {
+    idname = 'IC2:itemPartCircuitAdv',
+    data = 0,
+  }
+end
+
+local function glowstone()
+  return {
+    idname = 'minecraft:glowstone_dust',
+  }
+end
+
+local function batbox()
+  return {
+    idname = 'IC2:blockElectric',
+  }
+end
+
+return {
+  shape = {
+    casing(), circuit(), casing(),
+    casing(), batbox(), casing(),
+    glowstone(), nil, glowstone(),
+  },
+  output = {
+    item = {
+      idname = 'IC2:itemArmorJetpackElectric',
+      data = nil,
+    },
+    count = 1,
+  },
+  type = 'craft',
+}
+
+-- vim: ft=lua shiftwidth=2 expandtab colorcolumn=45 tw=44

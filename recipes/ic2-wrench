@@ -1,0 +1,24 @@
+local function bronze()
+  return {
+    idname = 'TConstruct:materials',
+    data = 13,
+  }
+end
+
+return {
+  shape = {
+    bronze(), nil, bronze(),
+    bronze(), bronze(), bronze(),
+    nil, bronze(), nil,
+  },
+  output = {
+    item = {
+      idname = 'IC2:itemToolWrench',
+      data = 0,
+    },
+    count = 1,
+  },
+  type = 'craft',
+}
+
+-- vim: ft=lua shiftwidth=2 expandtab colorcolumn=45 tw=44

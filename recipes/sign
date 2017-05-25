@@ -5,18 +5,25 @@ local function plank()
   }
 end
 
+local function stick()
+  return {
+    idname = 'minecraft:stick',
+    data = 0,
+  }
+end
+
 return {
   shape = {
-    nil, plank(), nil,
     plank(), plank(), plank(),
-    plank(), nil, nil
+    plank(), plank(), plank(),
+    nil, stick(), nil,
   },
   output = {
     item = {
-      idname = 'IC2:itemTreetap',
+      idname = 'minecraft:sign',
       data = 0,
     },
-    count = 1,
+    count = 3,
   },
   type = 'craft',
 }
