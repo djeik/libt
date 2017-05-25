@@ -248,7 +248,9 @@ end
 -- the first return value is nil, and the
 -- second is a human-readable string
 -- explaining why.
-function recipe.craftStrategy(item, items, count)
+function recipe.craftStrategy(item, items, count, allRecipes)
+  allRecipes = allRecipes or recipe.loadAll()
+
   count = count or 1
   local already, iid, ix = inv.lookup(item, items)
   if already >= count then
@@ -283,8 +285,6 @@ function recipe.craftStrategy(item, items, count)
   if already ~= 0 then
     count = count - already
   end
-
-  local allRecipes = recipe.loadAll()
 
   -- find all recipes that produce this item
   local rs = recipe.search(
@@ -341,7 +341,7 @@ function recipe.craftStrategy(item, items, count)
   -- count
   for s, c in pairs(inputs) do
     local item = t.read(s)
-    local strats, newErrors = recipe.craftStrategy(item, items, c)
+    local strats, newErrors = recipe.craftStrategy(item, items, c, allRecipes)
     t.extend(result, strats)
     t.extend(errors, newErrors)
   end
