@@ -1,8 +1,23 @@
 -- library for dealing with a central
 -- inventory
 
+local t = loadfile('libt')()
+local nbt = t.requireStrictTg('libnbt')
+
 local inv = {}
 inv.VERSION = { 0, 0, 1, 0 }
+
+-- checks whether a given item spec matches
+-- a LP ItemIdentifier
+function inv.matchIID(item, iid)
+  return (
+    iid.getIdName() == item.idname
+    and
+    (item.data == nil or item.data == iid.getData())
+    and
+    nbt.check(item.nbt, iid.getTagCompound())
+  )
+end
 
 -- | Check whether any of the items in the
 -- list contains the given idname.
@@ -11,8 +26,7 @@ function inv.lookup(item, items)
   for i, pair in ipairs(items) do
     local iid = pair.getValue1()
     local qty = pair.amount or pair.getValue2()
-    if iid.getIdName() == item.idname and
-      (item.data == nil or item.data == iid.getData()) then
+    if inv.matchIID(item, iid) then
       return qty, iid, i
     end
   end

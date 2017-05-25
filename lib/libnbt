@@ -1,0 +1,97 @@
+-- library for dealing with NBT tags
+
+local t = loadfile("libt")()
+
+local nbt = {}
+nbt.VERSION = { 0, 0, 1, 0 }
+
+nbt.checks = {
+  any = function(schemata, n)
+    for _, schema in ipairs(schemata) do
+      if nbt.check(schema, n) then
+        return true
+      end
+    end
+    return false
+  end,
+
+  all = function(schemata, n)
+    for _, schema in ipairs(schemata) do
+      if not nbt.check(schema, n) then
+        return false
+      end
+    end
+    return false
+  end,
+
+  eq = function(val, n)
+    return val == n.value
+  end,
+
+  -- has ensures the the NBT is a compound,
+  -- checks that it has a given key in
+  -- v.key.
+  -- If v.where exists, it must be a schema
+  -- that n.value[v.key] must satisfy.
+  has = function(v, n)
+    if n.type ~= 'NBTTagCompound' then
+      return false
+    end
+
+    local val = n.value[v.key]
+    if val == nil then
+      return false
+    end
+
+    if v.where == nil then
+      return true
+    else
+      return nbt.check(v.where, val)
+    end
+  end,
+
+  -- checks whether the NBT is empty
+  empty = function(v, n)
+    if v == true then
+      return n == nil or (
+        n.type == 'NBTTagCompound'
+        and
+        #n.keys == 0
+      )
+    else
+      return n ~= nil
+    end
+  end,
+}
+
+function nbt.check(schema, n)
+  -- the special schema nil matches
+  -- everything
+  print(
+    'nbt check: ',
+    t.show(schema),
+    ' ~~~ ',
+    t.show(n)
+  )
+
+  if schema == nil then
+    print('ok (nil)')
+    return true
+  end
+
+  for k, v in pairs(schema) do
+    local check = nbt.checks[k]
+      or error('unknown NBT check ' .. k)
+    if not check(v, n) then
+      print('not ok')
+      return false
+    end
+  end
+
+  print('ok')
+  return true
+end
+
+return nbt
+
+-- vim: ft=lua shiftwidth=2 expandtab colorcolumn=45 tw=44
