@@ -1,16 +1,65 @@
-local t = loadfile("libt")()
+-- tput is a client library for the Files API of a remote
+-- tput-server. See https://github.com/tsani/tput-servant
+--
+-- tput defines three functions:
+-- * tput.get(FILE) downloads FILE from the remote server and saves it
+--   with the same name locally, overwriting an existing file by that
+--   name.
+-- * tput.put(FILE) uploads FILE to the remote server with the same
+--   name with similar overwriting behaviour.
+-- * tput.list() obtains a list of all available files on the remote
+--   server.
+--
+-- By default, the remote server is assumed to be on localhost:8080,
+-- but this can be adjusted via a configuration file placed in
+-- /etc/tput
+-- The configuration is loaded at module load time. To reload the
+-- configuration you will need to either restart the computer or flush
+-- the global module cache. See libt for more details on the latter
+-- approach.
+--
+-- The configuration file is must contain a lua table with the
+-- following keys:
+-- * HOST : the hostname of the remote server
+-- * PORT : the application on the remote server
+-- * SCHEME : either "http" or "https"
 
-local tput = {}
-
-tput.VERSION = { 0, 0, 1, 0 }
-
-tput.CONNECTION = {
+local DEFAULT_CONNECTION = {
+  SCHEME = "https",
   HOST = "localhost",
   PORT = 8080
 }
 
+local function loadConfig()
+  local h = fs.open ("/etc/tput", "r")
+  if h == nil then
+    return DEFAULT_CONNECTION
+  end
+  local connection =
+    textutils.unserialize(h.readAll()) or
+    error "libtput: syntax error in /etc/tput"
+  if not ("table" == type(connection)) then
+    error "libtput: /etc/tput does not define a table"
+  end
+  if not ("string" == type(connection.HOST)) then
+    error "libtput: /etc/tput does not define a HOST string"
+  end
+  if not ("number" == type(connection.PORT)) then
+    error "libtput: /etc/tput does not define a PORT number"
+  end
+  if not ("http" == connection.SCHEME or "https" == connection.SCHEME) then
+    error "libtput: /etc/tput does not define SCHEME as \"http\" or \"https\""
+  end
+  return connection
+end
+
+local tput = {
+  VERSION = { 0, 0, 1, 0 },
+  CONNECTION = loadConfig()
+}
+
 local function mkUrl(append)
-  return "http://" ..
+  return tput.CONNECTION.SCHEME .. "://" ..
     tput.CONNECTION.HOST ..
     ":" ..
     tostring(tput.CONNECTION.PORT) ..
