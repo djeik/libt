@@ -231,7 +231,7 @@ function t.makeArray3(x, y, z)
     for j=1,y do
       local arrY = {}
       for k=1,z do
-        table.insert(arrY, nil) 
+        table.insert(arrY, nil)
       end
       table.insert(arrX, arrY)
     end
@@ -293,9 +293,22 @@ function t.find(tab, pred)
   return nil
 end
 
+-- | Finds the first element in an array satisfying the given
+-- | predicate. Returns the index of the element and the element.
+-- | Returns nil if none is found.
+function t.ifind(tab, pred)
+  pred = pred or function (i, x) return x end
+
+  for i, x in ipairs(tab) do
+    if pred(i, x) then
+      return i, x
+    end
+  end
+
+  return nil
+end
+
 -- | Loads a libt module.
--- Does not account for circular imports, so
--- don't make cycles!
 -- An inclusive lower bound on the version
 -- can be given as the second argument, and
 -- an exclusive upper bound on the version
@@ -559,6 +572,10 @@ function t.eq(x)
 end
 
 t.isNil = t.eq(nil)
+
+function t.isNotNil (x)
+  return not t.isNil(x)
+end
 
 function t.izip(...)
   return function()

@@ -72,6 +72,16 @@ function tturtle.moveStrict(d, count)
   return count
 end
 
+-- | Returns an array of sixteen elements representing the inventory
+-- | of the turtle.
+function tturtle.getInventory()
+  local inv = {}
+  for i = 1, 16 do
+    inv[i] = turtle.getItemDetail(i)
+  end
+  return inv
+end
+
 local function turnAround()
   turtle.turnRight()
   turtle.turnRight()

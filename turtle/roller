@@ -1,0 +1,93 @@
+-- A turtle program to act as a rolling machine that uses forge hammers.
+
+-- setup:
+-- * one chest above the turtle for inputs to apply a forge hammer to
+-- * one chest in front to contain forge hammers
+-- * one chest below for output
+
+local t = loadfile("libt")()
+local turtle = t.requireStrict("libturtle")
+
+local HAMMER_NAME = "ic2:forge_hammer"
+
+
+
+-- | Returns the inventory slot number and item description of the
+-- | inventory slot containing the forge hammer. Returns nil if there
+-- | is no hammer in the turtle's inventory.
+local function findForgeHammer()
+  local inv = turtle.getInventory()
+  inv = t.filter(t.isNotNil, inv)
+  local i, x = t.ifind(
+    inv,
+    function (_, item) return item.name == HAMMER_NAME end)
+  return i, x
+end
+
+local function hasAnythingButHammer()
+  local inv = turtle.getInventory()
+  inv = t.filter(t.isNotNil, inv)
+  return nil ~= t.find(inv, function (item) return item.name ~= HAMMER_NAME end)
+end
+
+local function awaitHammer()
+  print("Awaiting forge hammer in front chest...")
+  turtle.select(1)
+  while not turtle.suck() do
+    sleep(1)
+  end
+end
+
+-- | Ensures that a forge hammer is in inventory slot 1
+-- Precondition: inventory is empty or containing only a forge hammer
+local function ensureHammer1()
+  local i, x = findForgeHammer()
+  if nil == i then
+    awaitHammer()
+    i, x = findForgeHammer()
+    if nil == i then
+      error "got item other than a forge hammer from front chest"
+    end
+  end
+  turtle.select(i)
+  turtle.transferTo(1)
+  turtle.select(1)
+end
+
+local function awaitInput()
+  print("Awaiting input")
+  while not turtle.suckUp(32) do
+    sleep(1)
+  end
+end
+
+local function iteration()
+  ensureHammer1()
+  turtle.select(2)
+  if turtle.getItemDetail(2) == nil then
+    awaitInput()
+  end
+  turtle.select(16)
+  if not turtle.craft() then
+    print("Got incompatible item. Returning it to input chest.")
+    turtle.select(2)
+    turtle.dropUp()
+    return nil
+  end
+  turtle.dropDown()
+end
+
+local function loop()
+  while true do
+    iteration()
+  end
+end
+
+local function main(args)
+  if hasAnythingButHammer() then
+    error "initial inventory must be empty or contain only a forge hammer"
+  end
+  loop()
+end
+
+main({ ... })
