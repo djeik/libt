@@ -1,67 +1,62 @@
 LibT
 =====
 
-LibT is a collection of ComputerCraft/Lua libraries for facilitating
-development on ComputerCraft devices, i.e. computers and turtles.
+LibT is a collection of ComputerCraft/Lua libraries for facilitating development
+on ComputerCraft devices.
 
 `libt` is the most basic of these libraries, and brings basic functional
-programming capabilities to Lua. It includes a custom module system for loading
-any other libraries in the LibT suite.
+programming capabilities to Lua. It includes a module system for loading
+any other libraries in the LibT.
+
+All LibT libraries live in the `/lib` directory. Configuration files live in
+the `/etc` directory.
 
 To load `libt`, simply use `loadfile`.
 
     local t = loadfile("libt")()
 
-`libt` is (mostly) threadsafe, in the sense that if you try to load it twice,
-it caches itself in the system global cache, so you always get the same
-instance. This goes for all LibT modules.
-
-To load other LibT modules, use the `require` function.
-
-    local tnet = t.require("libtnet")
-
-If `require` fails it has nil. To handle the extremely common case or erroring
-on nil, LibT core provides `requireStrict`.
-
-Cyclic imports should be fine, since modules are cached, to avoid unnecessarily
-reloading them. If the same module is loaded twice (for example, libttext is
-requested independently by two dependencies of your program) then the same Lua
-table is returned by each call to require.
-
-It can be useful to clear the module cache. This is accomplished with the
-`clearModuleCache` function. This function can be invoked from the command line
-by executing libt directly with a truthy argument, e.g. `libt reload`.
-
-libtput
+Modules
 -------
 
-`libtput` is a simple client library to interact with
-[tput-servant](http://github.com/djeik/tput-servant), or any similar trivial
-file upload service.
+LibT includes a module system.
 
-Three functions are provided:
+Use `t.require(LIB)` to load the library `LIB` (a string) by traversing a list
+of search paths that includes the `/lib` directory. Modules are cached globally
+in each computer, so module state persists among programs that are
+executed. Loading the same module twice returns the same instance.
 
-* `get(file)` downloads the file named _file_ from the service and saves it to
-  disk as _file_; returns nil if the download fails.
-* `put(file)` uploads the file named _file_ from disk to the service as _file_.
-* `list()` produces a listing of all available files on the upload service with
-  one entry per line.
+An example LibT module `isEven` is defined like this:
 
-`libtput` comes with three scripts that use `libtput` and wrap it with nice
-error messages when things go wrong.
+```lua
+local isEven = {
+  VERSION = { 0, 0, 1, 0 }
+}
 
-* `tg file` is a wrapper for `get`.
-* `tp file` is a wrapper for `put`.
-* `tls` is a wrapper for `list`.
+function isEven.check(n)
+  return n % 2 == 0
+end
+>>>>>>> readme; move module-specific docs to the doc subdirectory
 
-Libtput provides additional helper functions for common workflows.
+return isEven
+```
 
-* `getStrict(file)` will error if `get(file)` would return nil.
-* `loadfile(file)` will call `getStrict(file)` and the use Lua's stock
-  `loadfile`. This is useful for loading functions over the network.
+Key observations:
+* The module is a Lua table. It must include a `VERSION` key that is an array of
+  4 numbers.
+* Define the contents of your module -- functions, constants, etc. -- as entries
+  in the table.
+* Return the table at the end of the file.
 
-libtmsg
--------
+The module's table is essentially its export list. Private functions can be
+defined with `local function foo () ... end`.
+
+Documentation
+-------------
+
+Module-specific documentation is in the `doc/` subdirectory.
+Here is a brief overview of some of the most sophisticated libraries.
+
+### libtmsg
 
 tput-servant was augmented with a simple messaging system, whereby sending a
 POST request to `/msg/:id` enqueues a message in the queue named `:id` and a
@@ -70,7 +65,7 @@ This functionality is exposed by libtmsg. Hence, libtmsg is an alternative to
 libtnet that is more robust, works across any distance, and costs no ingame
 resources!
 
-### Basic API
+#### Basic API
 
 * `send(id, msg, [contentType], [accept])` sends the given message to the queue
   named `id`. `contentType` and `accept` are used for the values of the
@@ -81,7 +76,7 @@ resources!
   Returns nil if the GET fails, or if the queue is empty.
 * `clearMessages(id)` clears the queue named `id`. This call cannot fail.
 
-### Advanced API
+#### Advanced API
 
 * `recvBlock(id, [accept], [timeout], [period], [strict])` calls `recv`
   repeatedly until a message is received. Hence, this is a polling
@@ -97,13 +92,12 @@ resources!
 * `recvJSONBlock`
 * `sendJSON`
 
-librmi
-------
+### librmi
 
 Librmi is a remote method invocation library for executing code on other
 computers. It leverages libtmsg and libreply.
 
-### Example
+#### Example
 
 To run a script on another computer, first place the script in the `/rmi`
 directory. This is where librmi looks for scripts to run remotely.
