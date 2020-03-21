@@ -25,6 +25,10 @@ of search paths that includes the `/lib` directory. Modules are cached globally
 in each computer, so module state persists among programs that are
 executed. Loading the same module twice returns the same instance.
 
+The LibT module cache can be flushed by running `libt` as a program and giving
+it any argument, e.g. `libt flush`. This can be necessary when a module enters
+an invalid state due to a programming error.
+
 An example LibT module `isEven` is defined like this:
 
 ```lua
