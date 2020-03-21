@@ -1,0 +1,5 @@
+{
+  HOST = "tunnel.jerrington.me",
+  PORT = 80,
+  SCHEME = "http"
+}
