@@ -83,36 +83,43 @@ function tput.put(file)
   return result
 end
 
--- | Returns an array of strings.
--- The dir parameter defaults to the root.
-function tput.ilist(dir)
-  local headers = {}
-  headers["Content-type"] = "text/plain; charset=utf-8"
-  headers["Accept"] = "text/plain; charset=utf-8"
+-- the ilist and list functions are available only if libt is actually
+-- present.
 
-  local url = nil
-  if dir == nil then
-    url = mkUrl("/list")
-  else
-    url = mkUrl("/list/" .. textutils.urlEncode(dir))
+local t = pcall(function () return loadfile("libt")() end)
+
+if nil ~= t then
+  -- | Returns an array of strings.
+  -- The dir parameter defaults to the root.
+  function tput.ilist(dir)
+    local headers = {}
+    headers["Content-type"] = "text/plain; charset=utf-8"
+    headers["Accept"] = "text/plain; charset=utf-8"
+
+    local url = nil
+    if dir == nil then
+      url = mkUrl("/list")
+    else
+      url = mkUrl("/list/" .. textutils.urlEncode(dir))
+    end
+
+    local result = http.get(
+      url, {
+        Accept = "*/*",
+           }
+    )
+
+    if result == nil then
+      return false
+    end
+
+    local s = result.readAll()
+    return t.splitBy(s, '\n')
   end
 
-  local result = http.get(
-    url, {
-      Accept = "*/*",
-    }
-  )
-
-  if result == nil then
-    return false
+  function tput.list(...)
+    return t.consume(tput.ilist(...))
   end
-
-  local s = result.readAll()
-  return t.splitBy(s, '\n')
-end
-
-function tput.list(...)
-  return t.consume(tput.ilist(...))
 end
 
 return tput

@@ -1,14 +1,4 @@
-local t = loadfile("libt")()
-if t == nil then
-  print("libt not available")
-  return nil
-end
-
-local tput = t.require("libtput")
-if tput == nil then
-  print("libtput not availe")
-  return nil
-end
+local tput = loadfile("lib/libtput")()
 
 local args = { ... }
 

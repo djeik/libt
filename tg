@@ -1,8 +1,4 @@
-local t = loadfile("libt")()
-  or error("failed to load libt")
-
-local tput = t.require("libtput")
-  or error("failed to load libtput")
+local tput = loadfile("lib/libtput")()
 
 local args = { ... }
 
