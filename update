@@ -3,7 +3,7 @@ local t = loadfile("libt")()
 
 local tput = t.requireStrict("libtput")
 
-local h = fs.open("/etsy/update", "r")
+local h = fs.open("/etc/update", "r")
 
 while true do
   local line = h.readLine()

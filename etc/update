@@ -13,4 +13,4 @@ lib/libttext
 lib/libturtle
 lib/libreply
 lib/librmi
-etsy/update
+etc/update
